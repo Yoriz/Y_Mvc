@@ -19,19 +19,17 @@ class SignalNotify(tuple):
 class SignalNotifyKw(tuple):
     '''Creates a Notification signal with given keywords'''
     def __new__(self, *keywords):
+        if not keywords:
+            raise AttributeError('At least one keyword required')
         items = list(sorted(keywords))
         items.insert(0, 'SignalNotifyKeywords')
         return tuple.__new__(self, items)
 
 
 class SignalAttr(tuple):
-    '''Creates a attribute signal for one or more keywords'''
-    def __new__(self, *keywords):
-        if not keywords:
-            raise AttributeError('At least one keyword required')
-        items = list(keywords)
-        items.insert(0, 'SignalAttr')
-        return tuple.__new__(self, items)
+    '''Creates a attribute signal'''
+    def __new__(self, attribute):
+        return tuple.__new__(self, ('SignalAttr', attribute))
 
 
 def onSignal(signal):
@@ -67,9 +65,9 @@ def onNotifyKw(*keywords):
 
 class YmvcBase(object):
     '''YmvcBase object for signal communication in ymvc'''
-    def __init__(self):
+    def __init__(self, useThread=True):
         '''Initialise attributes'''
-        self._ySignal = Ysignal()
+        self._ySignal = Ysignal(useThread)
 
     def bind(self, slot):
         '''bind a slot'''
@@ -99,7 +97,7 @@ class YmvcBase(object):
 class View(YmvcBase):
     '''Communicates from your view to the controller'''
     def __init__(self, gui):
-        super(View, self).__init__()
+        super(View, self).__init__(False)
         self.gui = gui
         self.controller = None
 
@@ -131,7 +129,7 @@ class Model(YmvcBase):
             return YmvcBase.__setattr__(self, name, value)
 
         if name in self._signaledAttr:
-            future = self._ySignal.signalExe.submit(self._setattrCall,
+            future = self._ySignal.threadPoolExe.submit(self._setattrCall,
                                                     name, value)
             future.add_done_callback(self._ySignal.slotCheck)
             return future
