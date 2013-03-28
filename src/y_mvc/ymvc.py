@@ -51,17 +51,17 @@ def onSignal(signal):
 
 
 def onAttr(Attribute):
-    '''Decorator a slot that binds to a model attribute'''
+    '''Decorates a slot that binds to a model attribute'''
     return onSignal(SignalAttr(Attribute))
 
 
 def onNotify(message):
-    '''Decorator a slot that binds to a message notification'''
+    '''Decorates a slot that binds to a message notification'''
     return onSignal(SignalNotify(message))
 
 
 def onNotifyKw(*keywords):
-    '''Decorator a slot that binds to a keywords notification'''
+    '''Decorates a slot that binds to a keywords notification'''
     return onSignal(SignalNotifyKw(*keywords))
 
 
@@ -69,7 +69,7 @@ class YmvcBase(object):
     '''YmvcBase object for signal communication in ymvc'''
     def __init__(self):
         '''Initialise attributes'''
-        self._ySignal = Ysignal(False)
+        self._ySignal = Ysignal()
 
     def bind(self, slot):
         '''bind a slot'''
