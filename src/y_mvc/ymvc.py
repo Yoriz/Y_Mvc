@@ -73,6 +73,14 @@ class YmvcBase(object):
         '''bind a slot'''
         self._ySignal.bind(slot)
 
+    def unbind(self, slot):
+        '''Remove slot from the list of listeners'''
+        self._ySignal.unbind(slot)
+
+    def unbindAll(self):
+        '''Remove all slots'''
+        self._ySignal.unbindAll()
+
     def waitInQueue(self):
         '''wait in the signal queue till current signals are done'''
         self._ySignal.waitInQueue()
