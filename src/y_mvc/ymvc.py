@@ -109,9 +109,9 @@ class View(YmvcBase):
         self.gui = gui
         self.controller = None
 
-    def setController(self, controller):
+    def setController(self, controller, *args, **kwargs):
         '''Set the controller related to this view'''
-        self.controller = controller
+        self.controller = controller(self.gui, *args, **kwargs)
 
 
 class Model(YmvcBase):
@@ -125,11 +125,11 @@ class Model(YmvcBase):
         super(Model, self).__init__()
         self._signaledAttr = attributes
 
-    def bind(self, slot):
+    def bind(self, slot, immediateCallback=True):
         '''binds a slot if it is an attribute slot emits its value'''
         super(Model, self).bind(slot)
-        if isinstance(slot._ySignal, SignalAttr):
-            self.slotGetAttr(slot)
+        if immediateCallback and isinstance(slot._ySignal, SignalAttr):
+                                                        self.slotGetAttr(slot)
 
     def __setattr__(self, name, value):
         '''Add a _setattrCall to the queue if listed in _signaledAttr'''
@@ -137,10 +137,13 @@ class Model(YmvcBase):
             return YmvcBase.__setattr__(self, name, value)
 
         if name in self._signaledAttr:
-            future = self._ySignal.threadPoolExe.submit(self._setattrCall,
-                                                    name, value)
-            future.add_done_callback(self._ySignal.slotCheck)
-            return future
+            if self._ySignal.useThread:
+                future = self._ySignal.threadPoolExe.submit(
+                                                self._setattrCall, name, value)
+                future.add_done_callback(self._ySignal.slotCheck)
+                return future
+            else:
+                self._setattrCall(name, value)
         else:
             return YmvcBase.__setattr__(self, name, value)
 
@@ -159,8 +162,6 @@ class Model(YmvcBase):
 
 class Controller(object):
     '''Communicates between a view and models'''
-    def __init__(self, view):
+    def __init__(self, gui, *args, **kwargs):
         '''Sets up the view/controller pairing'''
-        self.view = view
-        self.gui = view.gui
-        view.setController(self)
+        self.gui = gui
