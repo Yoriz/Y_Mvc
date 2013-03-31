@@ -113,6 +113,7 @@ class TestModel1(ymvc.Model):
         super(TestModel1, self).__init__('attr1', 'attr2')
         self.attr1 = attr1
         self.attr2 = attr2
+        self.attr3 = 'Attr3'
 
 
 class TestModel(unittest.TestCase):
@@ -151,6 +152,11 @@ class TestModel(unittest.TestCase):
         self.model.waitInQueue()
         self.assertEqual('Testing', self.attr1)
 
+    def testNonBindAttr(self):
+        self.assertEqual('Attr3', self.model.attr3)
+        self.model.attr3 = 'Altered'
+        self.assertEqual('Altered', self.model.attr3)
+
 
 class TestController(unittest.TestCase):
 
@@ -163,7 +169,7 @@ class TestController(unittest.TestCase):
         self.gui = Gui()
 
     def testCreateController(self):
-        controller = ymvc.Controller(self.gui.view)
+        controller = ymvc.Controller(self.gui)
         self.assertEqual(self.gui, controller.gui)
 
 
