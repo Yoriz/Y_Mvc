@@ -4,120 +4,11 @@ Created on 28 Mar 2013
 @author: Dave Wilson
 '''
 
-import wx
-import re
 from wxAnyThread import anythread
-from wx.lib.newevent import NewCommandEvent
+from y_mvc.y_mvc_wx.text_ctrl import TextChangeCtrl, EVT_TEXT_CHANGE
+import re
+import wx
 import ymvc
-
-TextChangeEvent, EVT_TEXT_CHANGE = NewCommandEvent()
-
-
-class TextCtrl(wx.TextCtrl):
-
-    def __init__(self, *args, **kwargs):
-        super(TextCtrl, self).__init__(*args, **kwargs)
-        self.insertionPoint = 0
-        self._isValid = False
-        self.checkCharAcceptable = lambda character: True
-        self.checkIsValid = lambda text: False
-        self.validColour = (144, 238, 144)
-        self.notValidColour = wx.NullColour
-
-        self.Bind(wx.EVT_CHAR, self.onChar)
-        self.Bind(wx.EVT_TEXT_PASTE, self.onPaste)
-
-    def onPaste(self, event):
-        data = wx.TextDataObject()
-        clipboard = wx.Clipboard()
-        dataOk = clipboard.GetData(data)
-        clipboard.Close()
-        if not dataOk:
-            return
-        pastedText = data.GetText()
-        acceptable = all(map(self.checkCharAcceptable, pastedText))
-        if not acceptable:
-            with wx.MessageDialog(self, 'Invalid character pasted', 'Error!',
-                                  wx.ICON_ERROR | wx.OK | wx.CENTER) as dialog:
-                dialog.ShowModal()
-                return
-
-        start, end = self.GetSelection()
-        text = self.GetValue()
-        if start != end:
-            text = ''.join((text[:start], text[end:]))
-
-        insertionPoint = end + len(pastedText)
-
-        newText = ''.join((text[:start], pastedText, text[start:]))
-        self.insertionPoint = insertionPoint
-        self.postTextChangeEvent(newText)
-
-    def onChar(self, event):
-        key = event.GetKeyCode()
-        insertionPoint = self.GetInsertionPoint()
-        start, end = self.GetSelection()
-        text = self.GetValue()
-        if 31 < key < 123:
-            char = chr(key)
-            if self.checkCharAcceptable(char):
-                newText = ''.join((text[:start], char, text[end:]))
-                self.insertionPoint = insertionPoint + 1
-                self.postTextChangeEvent(newText)
-
-        elif key in (wx.WXK_BACK, wx.WXK_DELETE) and start != end:
-            newText = ''.join((text[:start], text[end:]))
-            self.insertionPoint = insertionPoint
-            self.postTextChangeEvent(newText)
-
-        elif key == wx.WXK_BACK:
-            newText = ''.join((text[:start - 1], text[start:]))
-            self.insertionPoint = insertionPoint - 1
-            self.postTextChangeEvent(newText)
-
-        elif key == wx.WXK_DELETE:
-            newText = ''.join((text[:start], text[start + 1:]))
-            self.insertionPoint = insertionPoint
-            self.postTextChangeEvent(newText)
-
-        else:
-            event.Skip()
-
-    def postTextChangeEvent(self, newText):
-        evt = TextChangeEvent(self.Id)
-        evt.SetString(newText)
-        wx.PostEvent(self, evt)
-
-    def ChangeValue(self, value):
-        '''Change the value in the text entry field. Does not generate a
-        text change event. Formats the text'''
-        self.isValid = self.checkIsValid(value)
-
-        isEmpty = self.IsEmpty()
-        super(TextCtrl, self).ChangeValue(value)
-
-        if self.FindFocus() == self:
-            if isEmpty:
-                self.SetInsertionPointEnd()
-            else:
-                self.SetInsertionPoint(self.insertionPoint)
-
-    @property
-    def isValid(self):
-        return self._isValid
-
-    @isValid.setter
-    def isValid(self, isValid=False):
-        if self._isValid == isValid:
-            return
-        self._isValid = isValid
-        if isValid:
-            colour = self.validColour
-        else:
-            colour = self.notValidColour
-
-        self.SetBackgroundColour(colour)
-        self.GetParent().Refresh()
 
 
 class MainFrame(wx.Frame):
@@ -127,9 +18,9 @@ class MainFrame(wx.Frame):
 
         panel = wx.Panel(self)
         self.labelAttr1 = wx.StaticText(panel)
-        self.textAttr1 = TextCtrl(panel)
+        self.textAttr1 = TextChangeCtrl(panel)
         self.labelAttr2 = wx.StaticText(panel)
-        self.textAttr2 = TextCtrl(panel)
+        self.textAttr2 = TextChangeCtrl(panel)
         self.btnOpen = wx.Button(panel, wx.ID_OPEN)
 
         fGridSizer = wx.FlexGridSizer(cols=2, vgap=7, hgap=4)
@@ -188,9 +79,9 @@ class Frame2(wx.Frame):
 
         panel = wx.Panel(self)
         self.labelAttr1 = wx.StaticText(panel, label='Change Attr1')
-        self.textAttr1 = TextCtrl(panel)
+        self.textAttr1 = TextChangeCtrl(panel)
         self.labelAttr2 = wx.StaticText(panel, label='Change Attr2')
-        self.textAttr2 = TextCtrl(panel)
+        self.textAttr2 = TextChangeCtrl(panel)
 
         fGridSizer = wx.FlexGridSizer(cols=2, vgap=7, hgap=4)
         fGridSizer.Add(self.labelAttr1, flag=wx.ALIGN_CENTER_VERTICAL)
