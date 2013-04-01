@@ -9,10 +9,10 @@ from util.pagination import pagination
 
 
 class PageSelectorModel(ymvc.Model):
-    '''Keyword Notifcations
+    '''Keyword Notifications
             requestPageNo - call another model to set numRecords
-            offset, limit - call for database records
-            bottom, top - call for slice of data
+            'offset', 'limit' - call for database records
+            'bottom', 'top' - call for slice of data
     '''
     numRecords = 0
     perPage = 1000
