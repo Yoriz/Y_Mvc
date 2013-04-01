@@ -14,10 +14,6 @@ from y_mvc import ymvc
 
 class OlvOwnSortHasIdColumn(ObjectListView, ListCtrlAutoWidthMixin):
 
-    NotifySelectedId = ('Notify', 'selectedId')
-    NotifyDoubleClick = ('NotifyDoubleClick', 'selectedId')
-    NotifySortDetails = ('Notify', 'sortDetails')
-
     def __init__(self, *args, **kwargs):
         self.controller = None
         kwargs['sortable'] = False
@@ -322,6 +318,5 @@ if __name__ == '__main__':
             print 'doubleClickedId:', doubleClickedId
 
     requests = Requests(itemsModel)
-
 
     app.MainLoop()
