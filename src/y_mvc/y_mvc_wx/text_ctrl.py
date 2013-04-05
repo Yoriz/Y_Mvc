@@ -12,16 +12,14 @@ TextChangeEvent, EVT_TEXT_CHANGE = NewCommandEvent()
 
 class TextChangeCtrl(wx.TextCtrl):
     '''Rather then change the text itself, it fires a EVT_TEXT_CHANGE
-    Set a function to checkCharAcceptable that returns True/False
-    Set a function to checkIsValid that returns True/False
+    Set a function to acceptChar that returns True/False
     validColour and notValidColour can be set'''
 
     def __init__(self, *args, **kwargs):
         super(TextChangeCtrl, self).__init__(*args, **kwargs)
         self.insertionPoint = 0
         self._isValid = False
-        self.checkCharAcceptable = lambda character: True
-        self.checkIsValid = lambda text: False
+        self.acceptChar = lambda character: True
         self.validColour = (144, 238, 144)
         self.notValidColour = wx.NullColour
 
@@ -39,7 +37,7 @@ class TextChangeCtrl(wx.TextCtrl):
         if not dataOk:
             return
         pastedText = data.GetText()
-        acceptable = all(map(self.checkCharAcceptable, pastedText))
+        acceptable = all(map(self.acceptChar, pastedText))
         if not acceptable:
             with wx.MessageDialog(self, 'Invalid character pasted', 'Error!',
                                   wx.ICON_ERROR | wx.OK | wx.CENTER) as dialog:
@@ -55,57 +53,57 @@ class TextChangeCtrl(wx.TextCtrl):
 
         newText = ''.join((text[:start], pastedText, text[start:]))
         self.insertionPoint = insertionPoint
-        self.postTextChangeEvent(newText)
+        self.postTextChangeEvent(newText, self.insertionPoint, True)
 
     def onChar(self, event):
-        '''Sends an EVT_TEXT_CHANGE if the char passes checkCharAcceptable'''
+        '''Sends an EVT_TEXT_CHANGE if the char passes acceptChar'''
         key = event.GetKeyCode()
         insertionPoint = self.GetInsertionPoint()
         start, end = self.GetSelection()
         text = self.GetValue()
         if 31 < key < 123:
             char = chr(key)
-            if self.checkCharAcceptable(char):
+            if self.acceptChar(char):
                 newText = ''.join((text[:start], char, text[end:]))
                 self.insertionPoint = insertionPoint + 1
-                self.postTextChangeEvent(newText)
+                self.postTextChangeEvent(newText, self.insertionPoint)
 
         elif key in (wx.WXK_BACK, wx.WXK_DELETE) and start != end:
             newText = ''.join((text[:start], text[end:]))
             self.insertionPoint = insertionPoint
-            self.postTextChangeEvent(newText)
+            self.postTextChangeEvent(newText, self.insertionPoint)
 
         elif key == wx.WXK_BACK:
             newText = ''.join((text[:start - 1], text[start:]))
             self.insertionPoint = insertionPoint - 1
-            self.postTextChangeEvent(newText)
+            self.postTextChangeEvent(newText, self.insertionPoint)
 
         elif key == wx.WXK_DELETE:
             newText = ''.join((text[:start], text[start + 1:]))
             self.insertionPoint = insertionPoint
-            self.postTextChangeEvent(newText)
+            self.postTextChangeEvent(newText, self.insertionPoint)
 
         else:
             event.Skip()
 
-    def postTextChangeEvent(self, newText):
-        evt = TextChangeEvent(self.Id)
+    def postTextChangeEvent(self, newText, insertionPoint, pasted=False):
+        evt = TextChangeEvent(self.Id, insertionPoint=insertionPoint,
+                              pasted=pasted)
         evt.SetString(newText)
         wx.PostEvent(self, evt)
 
-    def ChangeValue(self, value):
-        '''Change the value in the text entry field. Does not generate a
-        text change event. Maintains insert point'''
-        self.isValid = self.checkIsValid(value)
-
-        isEmpty = self.IsEmpty()
-        super(TextChangeCtrl, self).ChangeValue(value)
-
-        if self.FindFocus() == self:
-            if isEmpty:
-                self.SetInsertionPointEnd()
-            else:
-                self.SetInsertionPoint(self.insertionPoint)
+#     def ChangeValue(self, value):
+#         '''Change the value in the text entry field. Does not generate a
+#         text change event. Maintains insert point'''
+# 
+#         isEmpty = self.IsEmpty()
+#         super(TextChangeCtrl, self).ChangeValue(value)
+# 
+#         if self.FindFocus() == self:
+#             if isEmpty:
+#                 self.SetInsertionPointEnd()
+#             else:
+#                 self.SetInsertionPoint(self.insertionPoint)
 
     @property
     def isValid(self):

@@ -210,9 +210,9 @@ class OlvOwnSortHasIdColumn(ObjectListView, ListCtrlAutoWidthMixin):
 #        self.Enable(False)
 
 
-class OlvController(ymvc.Controller):
+class OlvOwnSortHasIdColumnController(ymvc.Controller):
     def __init__(self, gui, itemsModel):
-        super(OlvController, self).__init__(gui)
+        super(OlvOwnSortHasIdColumnController, self).__init__(gui)
         self.itemsModel = itemsModel
         self.statusModel = itemsModel.statusModel
 
@@ -241,26 +241,31 @@ class OlvController(ymvc.Controller):
 
     @ymvc.onAttr('items')
     def onItemsModelItems(self, items):
-        self.gui.SetObjects(items)
+        if self.gui:
+            self.gui.SetObjects(items)
 
     @ymvc.onAttr('selectedId')
     def onItemsModelSelectedId(self, selectedId):
-        self.gui.selectId(selectedId)
+        if self.gui:
+            self.gui.selectId(selectedId)
 
     @ymvc.onAttr('sortDetails')
     def onItemsModelSortDetails(self, sortDetails):
-        sortName, ascending = sortDetails[0]
-        self.gui.setSortIndicator(sortName, ascending)
+        if self.gui:
+            sortName, ascending = sortDetails[0]
+            self.gui.setSortIndicator(sortName, ascending)
 
     @ymvc.onAttr('error')
     def onStatusModelError(self, error):
-        if error:
-            self.gui.SetEmptyListMsg(error)
+        if self.gui:
+            if error:
+                self.gui.SetEmptyListMsg(error)
 
     @ymvc.onAttr('status')
     def onStatusModelStatus(self, status):
-        if status == self.statusModel.STATUS_ACCESSING_DATA:
-            self.gui.modeAccessingData()
+        if self.gui:
+            if status == self.statusModel.STATUS_ACCESSING_DATA:
+                self.gui.modeAccessingData()
 
 
 if __name__ == '__main__':
@@ -290,7 +295,7 @@ if __name__ == '__main__':
         olv = OlvOwnSortHasIdColumn(panel)
         sizer.Add(olv, 1, wx.ALL | wx.EXPAND, 7)
         olv.SetColumns(columns)
-        olv.view.setController(OlvController, itemsModel)
+        olv.view.setController(OlvOwnSortHasIdColumnController, itemsModel)
         frame.Show()
         frame.olv = olv
         olv.SendSizeEvent()

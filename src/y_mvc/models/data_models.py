@@ -13,8 +13,9 @@ class StatusModel(ymvc.Model):
     STATUS_MODIFYING_DATA = 'Modifying Data'
     STATUS_SAVING_DATA = 'Saving Data'
     STATUS_CHECKING_DATA = 'Checking Data'
+    STATUS_ERROR = 'Data Error'
 
-    def __init__(self, status='Ok', error=None):
+    def __init__(self, status='Ok', error=''):
         super(StatusModel, self).__init__('status', 'error')
         self.status = status
         self.error = error
