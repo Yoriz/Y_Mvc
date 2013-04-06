@@ -4,7 +4,6 @@ Created on 24 Mar 2013
 @author: Dave Wilson
 '''
 
-from concurrent.futures import wait
 import ymvc
 import unittest
 
