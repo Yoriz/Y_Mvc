@@ -93,15 +93,15 @@ def onKwSignal(target):
     '''Decorates a method to only be called if the keywords match
     or if not called with a signal'''
     target._signal = keywordsSignal()
+    targetArgs = inspect.getargspec(target).args
+    targetArgs.remove('self')
+    targetArgs = set(targetArgs)
 
     @wraps(target)
     def wrapper(self, *args, **kwargs):
         signal_call = kwargs.pop(_SIGNAL, None)
         signalMatches = signal_call == target._signal
-        targetArgs = inspect.getargspec(target).args
-        calledArgs = kwargs.keys()
-        calledArgs.append('self')
-        keywordsMatch = set(calledArgs) == set(targetArgs)
+        keywordsMatch = set(kwargs.keys()) == targetArgs
         if not signal_call or (signalMatches and keywordsMatch):
             return target(self, *args, **kwargs)
     return wrapper
@@ -111,16 +111,15 @@ def onAttrSignal(target):
     '''Decorates a method to only be called if the keyword matches the
     attribute of the model that changed or if not called with a signal'''
     target._signal = attributeSignal()
+    targetArgs = inspect.getargspec(target).args
+    targetArgs.remove('self')
+    target._attributes = targetArgs
 
     @wraps(target)
     def wrapper(self, *args, **kwargs):
         signal_call = kwargs.pop(_SIGNAL, None)
-        signalMatches = signal_call == target._signal
-        targetArgs = inspect.getargspec(target).args
-        calledArgs = kwargs.keys()
-        calledArgs.append('self')
-        keywordsMatch = set(calledArgs) == set(targetArgs)
-        if not signal_call or (signalMatches and keywordsMatch):
+        if not signal_call or (signal_call == target._signal and
+                               kwargs.keys() == target._attributes):
             return target(self, *args, **kwargs)
     return wrapper
 
@@ -226,17 +225,13 @@ class Model(YmvcBase):
     def _setattrCall(self, name, value):
         '''Sets an attributes value and then sends a signal of its new value'''
         YmvcBase.__setattr__(self, name, value)
-        kwargs = {_SIGNAL: attributeSignal()}
+        kwargs = {_SIGNAL: attributeSignal(), name: getattr(self, name)}
         self._ySignal._emitCall(**kwargs)
 
     def slotGetAttr(self, slot):
         '''Emit the attribute for this slot only'''
-        print 'slot:', slot
-        print getattr(slot.__self__, slot.__func__.func_name)
-        targetArgs = inspect.getargspec(slot.__func__)
-        print 'targetArgs', targetArgs
-        signal, name = slot._signal, slot._signal[1]
-        kwargs = {_SIGNAL: attributeSignal()}
+        name = slot._attributes[0]
+        kwargs = {_SIGNAL: attributeSignal(), name: getattr(self, name)}
         return self._ySignal.emitSlot(slot, **kwargs)
 
 
