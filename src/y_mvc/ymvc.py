@@ -35,44 +35,6 @@ def attributeSignal():
     return (_SIGNAL_ATTR,)
 
 
-class SignalNotify(tuple):
-    '''Creates a Notification signal'''
-    def __new__(self, name):
-        return tuple.__new__(self, name)
-
-
-class SignalNotifyKw(tuple):
-    '''Creates a Notification signal with given keywords'''
-    def __new__(self, *keywords):
-        if not keywords:
-            raise AttributeError('At least one keyword required')
-        items = list(sorted(keywords))
-        items.insert(0, 'SignalNotifyKeywords')
-        return tuple.__new__(self, items)
-
-
-class SignalAttr(tuple):
-    '''Creates a attribute signal'''
-    def __new__(self, attribute):
-        return tuple.__new__(self, ('SignalAttr', attribute))
-
-
-def onSignal(signal):
-    '''Signal handler decorator, the decorated method will only be called if
-    the signal argument passed in matches the decorated signal or if no
-    signal argument is passed in at all'''
-    def decorator(target):
-        target._signal = signal
-
-        @wraps(target)
-        def wrapper(self, *args, **kwargs):
-            signal_call = kwargs.pop(_SIGNAL, None)
-            if not signal_call or (signal_call == signal):
-                return target(self, *args, **kwargs)
-        return wrapper
-    return decorator
-
-
 def onMsgSignal(message):
     '''Decorates a method to only be called if the message matches the signal
     or if not called with a signal'''
@@ -122,21 +84,6 @@ def onAttrSignal(target):
                                kwargs.keys() == target._attributes):
             return target(self, *args, **kwargs)
     return wrapper
-
-
-def onAttr(Attribute):
-    '''Decorates a slot that binds to a model attribute'''
-    return onSignal(SignalAttr(Attribute))
-
-
-# def onNotify(message):
-#     '''Decorates a slot that binds to a message notification'''
-#     return onSignal(SignalNotify(message))
-
-
-def onNotifyKw(*keywords):
-    '''Decorates a slot that binds to a keywords notification'''
-    return onSignal(SignalNotifyKw(*keywords))
 
 
 class YmvcBase(object):

@@ -8,58 +8,6 @@ import ymvc
 import unittest
 
 
-class TestOnSignal(unittest.TestCase):
-
-    def setUp(self):
-
-        self.attr1 = None
-        self.attr2 = None
-        self.attr3 = None
-
-    def tearDown(self):
-        unittest.TestCase.tearDown(self)
-
-    @ymvc.onNotifyKw('attr1')
-    def onTestOnSignal(self, attr1):
-        self.attr1 = attr1
-
-    @ymvc.onNotifyKw('attr1', 'attr2', 'attr3')
-    def onTestOnSignalManyKw(self, attr1, attr2, attr3):
-        self.attr1 = attr1
-        self.attr2 = attr2
-        self.attr3 = attr3
-
-    def testMethodHasSignal(self):
-        self.assertEqual(
-            ymvc.SignalNotifyKw('attr1'), self.onTestOnSignal._signal)
-
-    def testMethodCallDirect(self):
-        self.onTestOnSignal('testMethodCallDirect')
-        self.assertEqual('testMethodCallDirect', self.attr1)
-
-    def testMethodCallRightSignal(self):
-        kwargs = {ymvc._SIGNAL: ymvc.SignalNotifyKw('attr1'),
-                  'attr1': 'testMethodCallRightSignal'}
-        self.onTestOnSignal(**kwargs)
-        self.assertEqual('testMethodCallRightSignal', self.attr1)
-
-    def testMethodCallWrongSignal(self):
-        kwargs = {ymvc._SIGNAL: ymvc.SignalNotifyKw('wrong'),
-                  'attr1': 'testMethodCallRightSignal'}
-        self.onTestOnSignal(**kwargs)
-        self.assertEqual(None, self.attr1)
-
-    def testMethodCallManyKw(self):
-        kwargs = {ymvc._SIGNAL: ymvc.SignalNotifyKw('attr1', 'attr2', 'attr3'),
-                  'attr1': 'attr1',
-                  'attr2': 'attr2',
-                  'attr3': 'attr3'}
-        self.onTestOnSignalManyKw(**kwargs)
-        self.assertEqual('attr1', self.attr1)
-        self.assertEqual('attr2', self.attr2)
-        self.assertEqual('attr3', self.attr3)
-
-
 class TestBase(unittest.TestCase):
 
     def setUp(self):
