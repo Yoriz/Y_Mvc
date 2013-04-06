@@ -4,6 +4,7 @@ Created on 24 Mar 2013
 @author: Dave Wilson
 '''
 
+from concurrent.futures import wait
 import ymvc
 import unittest
 
@@ -64,6 +65,7 @@ class TestBase(unittest.TestCase):
 
     def setUp(self):
         self.ymvcBase = ymvc.YmvcBase()
+        self.ymvcBase._ySignal.threadPoolExe._max_workers = 1
         self.notifyCalled = False
         self.attr1 = None
         self.attr2 = None
