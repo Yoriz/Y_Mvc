@@ -139,26 +139,29 @@ class View(YmvcBase):
 class Model(YmvcBase):
     '''Contains the data of your application'''
 
-    _signaledAttr = []
-
-    def __init__(self, *attributes):
-        '''Set the attributes you want to observe changes
-        Decorate slots with onAttr(attribute)'''
+    def __init__(self):
+        '''Initialise'''
         super(Model, self).__init__()
-        self._signaledAttr = attributes
+        self._signaledAttrs = set()
+
+    def addObsAttrs(self, *attributes):
+        self._signaledAttrs.update(set(attributes))
+
+    def removeObsAttrs(self, *attributes):
+        self._signaledAttrs.difference_update(set(attributes))
 
     def bind(self, slot, immediateCallback=True):
-        '''binds a slot if it is an attribute slot emits its value'''
+        '''binds a slot if it is a signaledAttr emits its value'''
         super(Model, self).bind(slot)
         if immediateCallback and slot._signal == attributeSignal():
             self.slotGetAttr(slot)
 
     def __setattr__(self, name, value):
-        '''Add a _setattrCall to the queue if listed in _signaledAttr'''
+        '''Add a _setattrCall to the queue if listed in signaledAttrs'''
         if not hasattr(self, name):
             return YmvcBase.__setattr__(self, name, value)
 
-        if name in self._signaledAttr:
+        if name in self._signaledAttrs:
             if self._ySignal.useThread:
                 future = self._ySignal.threadPoolExe.submit(
                                                 self._setattrCall, name, value)

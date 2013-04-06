@@ -59,7 +59,8 @@ class TestBase(unittest.TestCase):
 class TestModel1(ymvc.Model):
 
     def __init__(self, attr1='StartValue', attr2='StartValue'):
-        super(TestModel1, self).__init__('attr1', 'attr2')
+        super(TestModel1, self).__init__()
+        self.addObsAttrs('attr1', 'attr2')
         self.attr1 = attr1
         self.attr2 = attr2
         self.attr3 = 'Attr3'
