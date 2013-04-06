@@ -32,7 +32,7 @@ class MainFrame(wx.Frame):
         self.Fit()
         self.Layout()
 
-        self.btn.Bind(wx.EVT_BUTTON, lambda x: self.view.notify('Start'))
+        self.btn.Bind(wx.EVT_BUTTON, lambda x: self.view.notifyMsg('Start'))
 
     @anythread
     def setLabel(self, value):
@@ -53,15 +53,15 @@ class MainFrameController(ymvc.Controller):
         self.delayedModel.bind(self.onDelayedModelBusy)
         self.delayedModel.bind(self.onDelayedModelValue)
 
-    @ymvc.onNotify('Start')
+    @ymvc.onMsgSignal('Start')
     def onViewStart(self):
-        self.delayedModel.notify('StartCount')
+        self.delayedModel.notifyMsg('StartCount')
 
-    @ymvc.onNotifyKw('busy')
+    @ymvc.onKwSignal
     def onDelayedModelBusy(self, busy):
         self.gui.setButtonState(not busy)
 
-    @ymvc.onAttr('value')
+    @ymvc.onAttrSignal
     def onDelayedModelValue(self, value):
         self.gui.setLabel(value)
 
@@ -72,7 +72,7 @@ class DelayedModel(ymvc.Model):
         self.bind(self.startCount)
         self.value = 0
 
-    @ymvc.onNotify('StartCount')
+    @ymvc.onMsgSignal('StartCount')
     def startCount(self):
         self.notifyKw(busy=True)
         for number in xrange(1, 11):
