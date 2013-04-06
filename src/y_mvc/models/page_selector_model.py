@@ -19,8 +19,8 @@ class PageSelectorModel(ymvc.Model):
     orphans = 0
 
     def __init__(self, pageNo=1, lastPageNo=1, pageDetails='Page'):
-        super(PageSelectorModel, self).__init__('pageNo', 'lastPageNo',
-                                                'pageDetails')
+        super(PageSelectorModel, self).__init__()
+        self.addObsAttrs('pageNo', 'lastPageNo', 'pageDetails')
         self.pageNo = pageNo
         self.lastPageNo = lastPageNo
         self.pageDetails = pageDetails

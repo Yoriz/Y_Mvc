@@ -68,7 +68,8 @@ class MainFrameController(ymvc.Controller):
 
 class DelayedModel(ymvc.Model):
     def __init__(self):
-        super(DelayedModel, self).__init__('value')
+        super(DelayedModel, self).__init__()
+        self.addObsAttrs('value')
         self.bind(self.startCount)
         self.value = 0
 

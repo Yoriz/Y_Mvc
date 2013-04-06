@@ -103,7 +103,8 @@ class MainFrameController(ymvc.Controller):
 class AttrModel(ymvc.Model):
 
     def __init__(self, attr1='', attr2=''):
-        super(AttrModel, self).__init__('attr1', 'attr2')
+        super(AttrModel, self).__init__()
+        self.addObsAttrs('attr1', 'attr2')
         self.attr1 = attr1
         self.attr2 = attr2
 
