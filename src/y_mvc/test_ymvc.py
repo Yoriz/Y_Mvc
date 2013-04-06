@@ -31,7 +31,7 @@ class TestOnSignal(unittest.TestCase):
 
     def testMethodHasSignal(self):
         self.assertEqual(
-            ymvc.SignalNotifyKw('attr1'), self.onTestOnSignal._ySignal)
+            ymvc.SignalNotifyKw('attr1'), self.onTestOnSignal._signal)
 
     def testMethodCallDirect(self):
         self.onTestOnSignal('testMethodCallDirect')

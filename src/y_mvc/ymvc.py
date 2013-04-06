@@ -8,6 +8,31 @@ from y_signal.ysignal import Ysignal
 from functools import wraps
 
 _SIGNAL = 'uniqueSignalKeyName'
+_SIGNAL = 'uniqueSignalKeyName'
+_SIGNAL_ATTR = 'Attr'
+_SIGNAL_MSG = 'Msg'
+_SIGNAL_KW = 'Kw'
+_SIGNAL_MSGKW = 'MsgKw'
+
+
+def msgSignal(msg):
+    '''Returns a tuple representing a message signal'''
+    return (_SIGNAL_MSG, msg)
+
+
+def kwSignal():
+    '''Returns a tuple representing a keyword signal'''
+    return (_SIGNAL_KW,)
+
+
+def msgKwSignal(msg):
+    '''Returns a tuple representing a message keyword signal'''
+    return (_SIGNAL_MSGKW, msg)
+
+
+def attrSignal():
+    '''Returns a tuple representing a attribute signal'''
+    return (_SIGNAL_ATTR,)
 
 
 class SignalNotify(tuple):
@@ -37,7 +62,7 @@ def onSignal(signal):
     the signal argument passed in matches the decorated signal or if no
     signal argument is passed in at all'''
     def decorator(target):
-        target._ySignal = signal
+        target._signal = signal
 
         @wraps(target)
         def wrapper(self, *args, **kwargs):
@@ -128,7 +153,7 @@ class Model(YmvcBase):
     def bind(self, slot, immediateCallback=True):
         '''binds a slot if it is an attribute slot emits its value'''
         super(Model, self).bind(slot)
-        if immediateCallback and isinstance(slot._ySignal, SignalAttr):
+        if immediateCallback and isinstance(slot._signal, SignalAttr):
                                                         self.slotGetAttr(slot)
 
     def __setattr__(self, name, value):
@@ -155,7 +180,7 @@ class Model(YmvcBase):
 
     def slotGetAttr(self, slot):
         '''Emit the attribute for this slot only'''
-        signal, name = slot._ySignal, slot._ySignal[1]
+        signal, name = slot._signal, slot._signal[1]
         kwargs = {_SIGNAL: signal, name: getattr(self, name)}
         return self._ySignal.emitSlot(slot, **kwargs)
 
