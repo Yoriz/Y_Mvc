@@ -56,13 +56,13 @@ class PageSelectorCtrl(wx.Panel):
 
     def onBtnFirst(self, event):
         self.setPageNo(1)
-        self.view.notifyKw(pageNo=self.getPageNo())
+        self.notifyPageNo()
         event.Skip()
 
     def onBtnPrevious(self, event):
         if self.getPageNo() > 1:
             self.setPageNo(self.getPageNo() - 1)
-            self.view.notifyKw(pageNo=self.getPageNo())
+            self.notifyPageNo()
         event.Skip()
 
     def onBtnPreviousUpdate(self, event):
@@ -72,7 +72,7 @@ class PageSelectorCtrl(wx.Panel):
 
     def onPageNo(self, event):
         self.setPageNo(int(event.String))
-        self.view.notifyKw(pageNo=self.getPageNo())
+        self.notifyPageNo()
 #        event.Skip()
 
     def onBtnNext(self, event):
@@ -89,8 +89,11 @@ class PageSelectorCtrl(wx.Panel):
 
     def onBtnLast(self, event):
         self.setPageNo(self.getlastPageNo())
-        self.view.notifyKw(pageNo=self.getPageNo())
+        self.notifyPageNo()
         event.Skip()
+
+    def notifyPageNo(self):
+        self.view.notifyKw(pageNo=self.getPageNo())
 
     def getPageNo(self):
         return self.ctrlPageNo.GetValue() or 1
@@ -123,19 +126,19 @@ class PageSelectorController(ymvc.Controller):
         self.pageSelectorModel.bind(self.onpageSelectorModelPageNo)
         self.pageSelectorModel.bind(self.onpageSelectorModelPageDetails)
 
-    @ymvc.onNotifyKw('pageNo')
+    @ymvc.onKwSignal
     def onViewPageNo(self, pageNo):
         self.pageSelectorModel.notifyKw(requestPageNo=pageNo)
 
-    @ymvc.onAttr('pageNo')
+    @ymvc.onKwSignal
     def onpageSelectorModelPageNo(self, pageNo):
         self.gui.setPageNo(pageNo)
 
-    @ymvc.onAttr('lastPageNo')
+    @ymvc.onAttrSignal
     def onpageSelectorModelLastPageNo(self, lastPageNo):
         self.gui.setLastPageNo(lastPageNo)
 
-    @ymvc.onAttr('pageDetails')
+    @ymvc.onAttrSignal
     def onpageSelectorModelPageDetails(self, pageDetails):
         self.gui.setPageDetails(pageDetails)
 
@@ -150,12 +153,12 @@ class GetRecordsTestModel(ymvc.Model):
         pageSelectorModel.bind(self.onPageSelectorModelRequestPageNo)
         pageSelectorModel.bind(self.onPageSelectorModelLimitOffset)
 
-    @ymvc.onNotifyKw('requestPageNo')
+    @ymvc.onKwSignal
     def onPageSelectorModelRequestPageNo(self, requestPageNo):
         self.pageSelectorModel.numRecords = self.numRecords
         self.pageSelectorModel.pageNo = requestPageNo
 
-    @ymvc.onNotifyKw('limit', 'offset')
+    @ymvc.onKwSignal
     def onPageSelectorModelLimitOffset(self, limit, offset):
         print 'Requested database records limit: {}, offset: {}'.format(limit,
                                                                         offset)

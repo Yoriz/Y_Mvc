@@ -40,6 +40,6 @@ class PageSelectorModel(ymvc.Model):
         self.notifyKw(offset=page.offset, limit=page.limit)
         self.notifyKw(bottom=page.bottom, top=page.top)
 
-    @ymvc.onNotifyKw('requestPageNo')
+    @ymvc.onKwSignal
     def onRequestPageNo(self, requestPageNo):
         print 'Requested pageNo:', requestPageNo
