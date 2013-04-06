@@ -73,17 +73,17 @@ class TestBase(unittest.TestCase):
     def tearDown(self):
         unittest.TestCase.tearDown(self)
 
-    @ymvc.onNotifyKw('attr1')
+    @ymvc.onKwSignal
     def onTestOnSignalKw(self, attr1):
         self.attr1 = attr1
 
-    @ymvc.onNotifyKw('attr2', 'attr1', 'attr3')
+    @ymvc.onKwSignal
     def onTestOnSignalManyKw(self, attr2, attr1, attr3):
         self.attr1 = attr1
         self.attr2 = attr2
         self.attr3 = attr3
 
-    @ymvc.onNotify('Empty')
+    @ymvc.onMsgSignal('Empty')
     def onTestOnSignalNotify(self):
         self.notifyCalled = True
 
@@ -103,7 +103,7 @@ class TestBase(unittest.TestCase):
 
     def testNotify(self):
         self.ymvcBase.bind(self.onTestOnSignalNotify)
-        self.ymvcBase.notify('Empty')
+        self.ymvcBase.notifyMsg('Empty')
         self.ymvcBase.waitInQueue()
         self.assertEqual(True, self.notifyCalled)
 
@@ -124,11 +124,11 @@ class TestModel(unittest.TestCase):
         self.attr1 = None
         self.attr2 = None
 
-    @ymvc.onAttr('attr1')
+    @ymvc.onAttrSignal
     def attr1Callback(self, attr1):
         self.attr1 = attr1
 
-    @ymvc.onAttr('attr2')
+    @ymvc.onAttrSignal
     def attr2Callback(self, attr2):
         self.attr2 = attr2
 
