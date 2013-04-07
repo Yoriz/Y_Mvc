@@ -82,12 +82,12 @@ class PagedOlv(GaugeFrame):
 
 
 class PagedOlvController(ymvc.Controller):
-    def __init__(self, gui, itemsModel, pageSelectorModel):
+    def __init__(self, gui, PagedItemsModel):
         super(PagedOlvController, self).__init__(gui)
         self.gui.ctrlOlv.view.setController(OlvOwnSortHasIdColumnController,
-                                       itemsModel)
+                                       PagedItemsModel)
         self.gui.ctrlPage.view.setController(PageSelectorController,
-                                        pageSelectorModel)
+                                        PagedItemsModel)
 
 
 if __name__ == '__main__':

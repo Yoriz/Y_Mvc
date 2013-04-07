@@ -116,19 +116,19 @@ class PageSelectorCtrl(wx.Panel):
 
 
 class PageSelectorController(ymvc.Controller):
-    def __init__(self, gui, pageSelectorModel):
+    def __init__(self, gui, pageModel):
         super(PageSelectorController, self).__init__(gui)
-        self.pageSelectorModel = pageSelectorModel
+        self.pageModel = pageModel
 
         self.gui.view.bind(self.onViewPageNo)
 
-        self.pageSelectorModel.bind(self.onpageSelectorModelLastPageNo)
-        self.pageSelectorModel.bind(self.onpageSelectorModelPageNo)
-        self.pageSelectorModel.bind(self.onpageSelectorModelPageDetails)
+        self.pageModel.bind(self.onpageSelectorModelLastPageNo)
+        self.pageModel.bind(self.onpageSelectorModelPageNo)
+        self.pageModel.bind(self.onpageSelectorModelPageDetails)
 
     @ymvc.onKwSignal
     def onViewPageNo(self, pageNo):
-        self.pageSelectorModel.notifyKw(requestPageNo=pageNo)
+        self.pageModel.requestPageNo(pageNo)
 
     @ymvc.onKwSignal
     def onpageSelectorModelPageNo(self, pageNo):
@@ -144,19 +144,19 @@ class PageSelectorController(ymvc.Controller):
 
 
 class GetRecordsTestModel(ymvc.Model):
-    def __init__(self, pageSelectorModel):
+    def __init__(self, pageModel):
         super(GetRecordsTestModel, self).__init__()
-        self.pageSelectorModel = pageSelectorModel
+        self.pageModel = pageModel
         self.numRecords = 2500
         self.onPageSelectorModelRequestPageNo(1)
 
-        pageSelectorModel.bind(self.onPageSelectorModelRequestPageNo)
-        pageSelectorModel.bind(self.onPageSelectorModelLimitOffset)
+        pageModel.bind(self.onPageSelectorModelRequestPageNo)
+        pageModel.bind(self.onPageSelectorModelLimitOffset)
 
     @ymvc.onKwSignal
     def onPageSelectorModelRequestPageNo(self, requestPageNo):
-        self.pageSelectorModel.numRecords = self.numRecords
-        self.pageSelectorModel.pageNo = requestPageNo
+        self.pageModel.numRecords = self.numRecords
+        self.pageModel.pageNo = requestPageNo
 
     @ymvc.onKwSignal
     def onPageSelectorModelLimitOffset(self, limit, offset):
@@ -164,14 +164,13 @@ class GetRecordsTestModel(ymvc.Model):
                                                                         offset)
 
 if __name__ == '__main__':
-    from y_mvc.models.page_selector_model import PageSelectorModel
-    pageSelectorModel = PageSelectorModel()
-    getRecordsTestModel = GetRecordsTestModel(pageSelectorModel)
+    from y_mvc.models.page_model import PageModel
+    pageModel = PageModel()
+    getRecordsTestModel = GetRecordsTestModel(pageModel)
     wxapp = wx.App(None)
     frame = wx.Frame(None, title="Testing PageDetails Panel")
     pageSelectorCtrl = PageSelectorCtrl(frame)
-    pageSelectorCtrl.view.setController(PageSelectorController,
-                                        pageSelectorModel)
+    pageSelectorCtrl.view.setController(PageSelectorController, pageModel)
     fSizer = wx.BoxSizer(wx.VERTICAL)
     fSizer.Add(pageSelectorCtrl)
     frame.SetSizer(fSizer)

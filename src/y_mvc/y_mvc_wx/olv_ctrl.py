@@ -10,7 +10,7 @@ from wx.lib.mixins.listctrl import ListCtrlAutoWidthMixin
 from ObjectListView import ObjectListView, ColumnDefn
 from wxAnyThread import anythread
 from y_mvc import ymvc
-from y_mvc.models import data_models
+from y_mvc.models import data_model
 
 
 class OlvOwnSortHasIdColumn(ObjectListView, ListCtrlAutoWidthMixin):
@@ -263,13 +263,13 @@ class OlvOwnSortHasIdColumnController(ymvc.Controller):
     @ymvc.onAttrSignal
     def onStatusModelStatus(self, status):
         if self.gui:
-            if status == data_models.STATUS_ACCESSING_DATA:
+            if status == data_model.STATUS_ACCESSING_DATA:
                 self.gui.modeAccessingData()
 
 
 if __name__ == '__main__':
     from collections import namedtuple
-    from y_mvc.models.data_models import ItemsModel
+    from y_mvc.models.data_model import ItemsModel
 
     DataItem = namedtuple('DataItem', 'id customerName partNumber')
     items = [DataItem(1, 'Apph', '1234'),

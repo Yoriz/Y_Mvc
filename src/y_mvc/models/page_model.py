@@ -8,9 +8,8 @@ from y_mvc import ymvc
 from util.pagination import pagination
 
 
-class PageSelectorModel(ymvc.Model):
+class PageModel(ymvc.Model):
     '''Keyword Notifications
-            requestPageNo - call another model to set numRecords
             'offset', 'limit' - call for database records
             'bottom', 'top' - call for slice of data
     '''
@@ -19,7 +18,7 @@ class PageSelectorModel(ymvc.Model):
     orphans = 0
 
     def __init__(self, pageNo=1, lastPageNo=1, pageDetails='Page'):
-        super(PageSelectorModel, self).__init__()
+        super(PageModel, self).__init__()
         self.addObsAttrs('pageNo', 'lastPageNo', 'pageDetails')
         self.pageNo = pageNo
         self.lastPageNo = lastPageNo
@@ -34,11 +33,14 @@ class PageSelectorModel(ymvc.Model):
     @pageNo.setter
     def pageNo(self, value):
         page = pagination(value, self.numRecords, self.perPage, self.orphans)
+        self.notifyKw(offset=page.offset, limit=page.limit)
+        self.notifyKw(bottom=page.bottom, top=page.top)
         self.lastPageNo = page.numPages
         self._pageNo = page.pageNo
         self.pageDetails = page.details
-        self.notifyKw(offset=page.offset, limit=page.limit)
-        self.notifyKw(bottom=page.bottom, top=page.top)
+
+    def requestPageNo(self, pageNo):
+        self.notifyKw(requestPageNo=pageNo)
 
     @ymvc.onKwSignal
     def onRequestPageNo(self, requestPageNo):
