@@ -13,7 +13,9 @@ from y_mvc import ymvc
 from y_mvc.models import data_model
 
 
-class OlvOwnSortHasIdColumn(ObjectListView, ListCtrlAutoWidthMixin):
+class OlvCtrl(ObjectListView, ListCtrlAutoWidthMixin):
+    '''An ObjectListView that request you sort you own data.
+    and has methods for an id column'''
 
     def __init__(self, *args, **kwargs):
         self.controller = None
@@ -21,7 +23,7 @@ class OlvOwnSortHasIdColumn(ObjectListView, ListCtrlAutoWidthMixin):
         if not kwargs.get('sytle'):
             kwargs['style'] = (wx.LC_REPORT | wx.LC_SINGLE_SEL |
                                wx.LC_HRULES | wx.LC_VRULES)
-        super(OlvOwnSortHasIdColumn, self).__init__(*args, **kwargs)
+        super(OlvCtrl, self).__init__(*args, **kwargs)
         ListCtrlAutoWidthMixin.__init__(self)
         self.selectedId = None
         self.previousSortIndex = -1
@@ -45,7 +47,7 @@ class OlvOwnSortHasIdColumn(ObjectListView, ListCtrlAutoWidthMixin):
         if not self.smallImageList:
             self.SetImageLists()
         hasName = self.smallImageList.HasName(
-                            super(OlvOwnSortHasIdColumn, self).NAME_DOWN_IMAGE)
+                            super(OlvCtrl, self).NAME_DOWN_IMAGE)
         sizeCondition = self.smallImageList.GetSize(0) == (16, 16)
         if not hasName and sizeCondition:
             self.RegisterSortIndicators()
@@ -112,7 +114,7 @@ class OlvOwnSortHasIdColumn(ObjectListView, ListCtrlAutoWidthMixin):
         event.Skip()
 
     def SetColumns(self, column_defns, repopulate=True):
-        super(OlvOwnSortHasIdColumn, self).SetColumns(column_defns, repopulate)
+        super(OlvCtrl, self).SetColumns(column_defns, repopulate)
         self.AutoSizeColumns()
 
     def getSelectedObjectId(self):
@@ -139,7 +141,7 @@ class OlvOwnSortHasIdColumn(ObjectListView, ListCtrlAutoWidthMixin):
     def SetObjects(self, modelObjects, preserveSelection=False):
         parent = self.GetParent()
         parent.Freeze()
-        super(OlvOwnSortHasIdColumn, self).SetObjects(modelObjects,
+        super(OlvCtrl, self).SetObjects(modelObjects,
                                                       preserveSelection)
         self.SetEmptyListMsg("No Data")
         wx.CallAfter(self.AutoSizeColumns)
@@ -186,7 +188,7 @@ class OlvOwnSortHasIdColumn(ObjectListView, ListCtrlAutoWidthMixin):
 
     @anythread
     def SetEmptyListMsg(self, msg):
-        super(OlvOwnSortHasIdColumn, self).SetEmptyListMsg(msg)
+        super(OlvCtrl, self).SetEmptyListMsg(msg)
 
     @anythread
     def modeAccessingData(self):
@@ -210,9 +212,9 @@ class OlvOwnSortHasIdColumn(ObjectListView, ListCtrlAutoWidthMixin):
 #        self.Enable(False)
 
 
-class OlvOwnSortHasIdColumnController(ymvc.Controller):
+class OlvCtrlController(ymvc.Controller):
     def __init__(self, gui, itemsModel):
-        super(OlvOwnSortHasIdColumnController, self).__init__(gui)
+        super(OlvCtrlController, self).__init__(gui)
         self.itemsModel = itemsModel
 
         gui.view.bind(self.onViewKwSelectedId)
@@ -291,10 +293,10 @@ if __name__ == '__main__':
         panel = wx.Panel(frame)
         sizer = wx.BoxSizer(wx.VERTICAL)
         panel.SetSizer(sizer)
-        olv = OlvOwnSortHasIdColumn(panel)
+        olv = OlvCtrl(panel)
         sizer.Add(olv, 1, wx.ALL | wx.EXPAND, 7)
         olv.SetColumns(columns)
-        olv.view.setController(OlvOwnSortHasIdColumnController, itemsModel)
+        olv.view.setController(OlvCtrlController, itemsModel)
         frame.Show()
         frame.olv = olv
         olv.SendSizeEvent()

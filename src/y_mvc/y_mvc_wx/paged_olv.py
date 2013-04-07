@@ -5,27 +5,22 @@ Created on 5 Apr 2013
 '''
 
 import wx
-from wxAnyThread import anythread
-from wx_lib.frames import GaugeFrame, FRAME_DIALOG_STYLE3
 from y_mvc import ymvc
-from olv_ctrl import OlvOwnSortHasIdColumn, OlvOwnSortHasIdColumnController
+from olv_ctrl import OlvCtrl, OlvCtrlController
 from page_selector_ctrl import PageSelectorCtrl, PageSelectorController
 
 
-class PagedOlv(GaugeFrame):
+class PagedOlvPanel(wx.Panel):
     def __init__(self, *args, **kwargs):
-        if not kwargs.get('sytle'):
-            kwargs['style'] = FRAME_DIALOG_STYLE3
-        super(PagedOlv, self).__init__(*args, **kwargs)
+        super(PagedOlvPanel, self).__init__(*args, **kwargs)
         self.view = ymvc.View(self)
 
         #------------------------------------------------------------- Controls
-        panel = wx.Panel(self, style=wx.TAB_TRAVERSAL)
-        self.ctrlOlv = OlvOwnSortHasIdColumn(panel)
-        self.ctrlPage = PageSelectorCtrl(panel)
-        self.btnNew = wx.Button(panel, wx.ID_NEW)
-        self.btnEdit = wx.Button(panel, wx.ID_EDIT)
-        self.btnSelectNone = wx.Button(panel, label='Select None')
+        self.ctrlOlv = OlvCtrl(self)
+        self.ctrlPage = PageSelectorCtrl(self)
+        self.btnNew = wx.Button(self, wx.ID_NEW)
+        self.btnEdit = wx.Button(self, wx.ID_EDIT)
+        self.btnSelectNone = wx.Button(self, label='Select None')
 
         #--------------------------------------------------------------- Sizers
         hSizer = wx.BoxSizer(wx.HORIZONTAL)
@@ -39,26 +34,16 @@ class PagedOlv(GaugeFrame):
         vSizer.Add(self.ctrlOlv, 1, wx.EXPAND | wx.ALL, 7)
         vSizer.Add(hSizer, 0, wx.EXPAND | wx.LEFT | wx.RIGHT, 7)
         vSizer.AddSpacer((0, 7))
-        panel.SetSizer(vSizer)
-
-        self.setPanel(panel)
+        self.SetSizer(vSizer)
 
         #------------------------------------------------------------- Settings
-        self.SetInitialSize((800, 600))
-        self.CenterOnParent()
-        self.GetParent().Disable()
-
         #---------------------------------------------------------------- Binds
-        self.Bind(wx.EVT_CLOSE, self.onClose)
         self.btnNew.Bind(wx.EVT_BUTTON, self.onBtnNew)
         self.btnEdit.Bind(wx.EVT_BUTTON, self.onBtnEdit)
         self.btnEdit.Bind(wx.EVT_UPDATE_UI, self.onBtnEditUpdate)
         self.btnSelectNone.Bind(wx.EVT_BUTTON, self.onBtnSelectNone)
 
     #------------------------------------------------------------------- Events
-    def onClose(self, event):
-        self.Close()
-
     def onBtnNew(self, event):
         self.view.notifyMsg('New')
 
@@ -73,31 +58,25 @@ class PagedOlv(GaugeFrame):
         event.Skip()
 
     #------------------------------------------------------------------ Actions
-    @anythread
-    def Close(self):
-        self.GetParent().Enable()
-        self.Destroy()
-
     #------------------------------------------------------------------ Methods
 
 
-class PagedOlvController(ymvc.Controller):
-    def __init__(self, gui, PagedItemsModel):
-        super(PagedOlvController, self).__init__(gui)
-        self.gui.ctrlOlv.view.setController(OlvOwnSortHasIdColumnController,
-                                       PagedItemsModel)
+class PagedOlvCtrlController(ymvc.Controller):
+    def __init__(self, gui, pagedItemsModel):
+        super(PagedOlvCtrlController, self).__init__(gui)
+        self.gui.ctrlOlv.view.setController(OlvCtrlController,
+                                       pagedItemsModel)
         self.gui.ctrlPage.view.setController(PageSelectorController,
-                                        PagedItemsModel)
+                                        pagedItemsModel)
 
 
 if __name__ == '__main__':
+    from y_mvc.models.data_model import PagedItemsModel
+    pagedItemsModel = PagedItemsModel()
+
     wxapp = wx.App(False)
-
-    parentFrame = wx.Frame(None)
-    parentFrame.Show()
-
-    frame = PagedOlv(parentFrame)
-#     accessModel = AccessModel()
-#     frame.view.setController(MainAppController, accessModel)
+    frame = wx.Frame(None)
+    pagedOlvCtrl = PagedOlvPanel(frame)
+    pagedOlvCtrl.view.setController(PagedOlvCtrlController, pagedItemsModel)
     frame.Show()
     wxapp.MainLoop()
