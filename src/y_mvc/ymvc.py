@@ -44,8 +44,26 @@ def onMsgSignal(message):
         @wraps(target)
         def wrapper(self, *args, **kwargs):
             signal_call = kwargs.pop(_SIGNAL, None)
-            signalMatches = signal_call == target._signal
-            if not signal_call or signalMatches:
+            if not signal_call or signal_call == target._signal:
+                return target(self, *args, **kwargs)
+        return wrapper
+    return decorator
+
+
+def onMsgKwSignal(message):
+    '''Decorates a method to only be called if the message and keywords match
+    the signal or if not called with a signal'''
+    def decorator(target):
+        target._signal = messsageWithKeywordsSignal(message)
+        targetArgs = inspect.getargspec(target).args
+        targetArgs.remove('self')
+        targetArgs = set(targetArgs)
+
+        @wraps(target)
+        def wrapper(self, *args, **kwargs):
+            signal_call = kwargs.pop(_SIGNAL, None)
+            if not signal_call or (signal_call == target._signal and
+                                   set(kwargs.keys()) == targetArgs):
                 return target(self, *args, **kwargs)
         return wrapper
     return decorator
@@ -62,9 +80,8 @@ def onKwSignal(target):
     @wraps(target)
     def wrapper(self, *args, **kwargs):
         signal_call = kwargs.pop(_SIGNAL, None)
-        signalMatches = signal_call == target._signal
-        keywordsMatch = set(kwargs.keys()) == targetArgs
-        if not signal_call or (signalMatches and keywordsMatch):
+        if not signal_call or (signal_call == target._signal and
+                               set(kwargs.keys()) == targetArgs):
             return target(self, *args, **kwargs)
     return wrapper
 
@@ -113,14 +130,19 @@ class YmvcBase(object):
         self._ySignal.waitTillQueueEmpty()
 
     def notifyMsg(self, message):
-        '''Calls methods decorated with onMessageSignal'''
+        '''Call methods decorated with onMessageSignal with matching message'''
         kwargs = {_SIGNAL: messageSignal(message)}
         return self._ySignal.emit(**kwargs)
 
     def notifyKw(self, **kwargs):
-        '''Sends a keywords notification to all slots interested
-        Decorate slots with onNotifyKw(*keywords)'''
+        '''Call methods decorated with onKwSignal with matching keywords'''
         kwargs[_SIGNAL] = keywordsSignal()
+        return self._ySignal.emit(**kwargs)
+
+    def notifyMsgKw(self, message, **kwargs):
+        '''Call methods decorated with onMsgKwSignal with matching message and
+        keywords'''
+        kwargs[_SIGNAL] = messsageWithKeywordsSignal(message)
         return self._ySignal.emit(**kwargs)
 
 

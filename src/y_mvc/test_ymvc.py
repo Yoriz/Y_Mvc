@@ -32,8 +32,14 @@ class TestBase(unittest.TestCase):
         self.attr3 = attr3
 
     @ymvc.onMsgSignal('Empty')
-    def onTestOnSignalNotify(self):
+    def onTestOnSignalNotifyMsg(self):
         self.notifyCalled = True
+
+    @ymvc.onMsgKwSignal('CallMe')
+    def onTestOnSignalNotifyMsgKw(self, attr1, attr2):
+        self.attr1 = attr1
+        self.attr2 = attr2
+        self.attr3 = 'CallMe'
 
     def testNotifyKw(self):
         self.ymvcBase.bind(self.onTestOnSignalKw)
@@ -50,10 +56,18 @@ class TestBase(unittest.TestCase):
         self.assertEqual('attr3', self.attr3)
 
     def testNotify(self):
-        self.ymvcBase.bind(self.onTestOnSignalNotify)
+        self.ymvcBase.bind(self.onTestOnSignalNotifyMsg)
         self.ymvcBase.notifyMsg('Empty')
         self.ymvcBase.waitInQueue()
         self.assertEqual(True, self.notifyCalled)
+
+    def testNotifyMsgKw(self):
+        self.ymvcBase.bind(self.onTestOnSignalNotifyMsgKw)
+        self.ymvcBase.notifyMsgKw('CallMe', attr1='attr1', attr2='attr2')
+        self.ymvcBase.waitInQueue()
+        self.assertEqual('attr1', self.attr1)
+        self.assertEqual('attr2', self.attr2)
+        self.assertEqual('CallMe', self.attr3)
 
 
 class TestModel1(ymvc.Model):
