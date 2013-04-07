@@ -5,7 +5,6 @@ Created on 1 Apr 2013
 '''
 
 from y_mvc import ymvc
-from page_model import PageModel
 
 STATUS_OK = 'Ok'
 STATUS_ACCESSING_DATA = 'Accessing Data'
@@ -38,9 +37,3 @@ class ItemsModel(BaseDataModel):
     def requestChangeSortDetails(self, sortDetails):
         '''call another model to update items based on sortDetails'''
         self.notifyKw(changeSortDetails=sortDetails)
-
-
-class PagedItemsModel(ItemsModel, PageModel):
-    def __init__(self):
-        ItemsModel.__init__(self)
-        PageModel.__init__(self)

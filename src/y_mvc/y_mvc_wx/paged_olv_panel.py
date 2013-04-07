@@ -61,22 +61,28 @@ class PagedOlvPanel(wx.Panel):
     #------------------------------------------------------------------ Methods
 
 
-class PagedOlvCtrlController(ymvc.Controller):
-    def __init__(self, gui, pagedItemsModel):
-        super(PagedOlvCtrlController, self).__init__(gui)
+class PagedOlvPanelController(ymvc.Controller):
+    def __init__(self, gui, ItemsModel, pageModel):
+        super(PagedOlvPanelController, self).__init__(gui)
         self.gui.ctrlOlv.view.setController(OlvCtrlController,
-                                       pagedItemsModel)
+                                       ItemsModel)
         self.gui.ctrlPage.view.setController(PageSelectorController,
-                                        pagedItemsModel)
+                                        pageModel)
+        self.ItemsModel = ItemsModel
+        self.pageModel = pageModel
 
 
 if __name__ == '__main__':
-    from y_mvc.models.data_model import PagedItemsModel
-    pagedItemsModel = PagedItemsModel()
+    from y_mvc.models.data_model import ItemsModel
+    from y_mvc.models.page_model import PageModel
+
+    itemsModel = ItemsModel()
+    pageModel = PageModel()
 
     wxapp = wx.App(False)
     frame = wx.Frame(None)
     pagedOlvCtrl = PagedOlvPanel(frame)
-    pagedOlvCtrl.view.setController(PagedOlvCtrlController, pagedItemsModel)
+    pagedOlvCtrl.view.setController(PagedOlvPanelController, itemsModel,
+                                    pageModel)
     frame.Show()
     wxapp.MainLoop()
