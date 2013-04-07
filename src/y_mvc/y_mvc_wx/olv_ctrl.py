@@ -10,6 +10,7 @@ from wx.lib.mixins.listctrl import ListCtrlAutoWidthMixin
 from ObjectListView import ObjectListView, ColumnDefn
 from wxAnyThread import anythread
 from y_mvc import ymvc
+from y_mvc.models import data_models
 
 
 class OlvOwnSortHasIdColumn(ObjectListView, ListCtrlAutoWidthMixin):
@@ -144,7 +145,6 @@ class OlvOwnSortHasIdColumn(ObjectListView, ListCtrlAutoWidthMixin):
         wx.CallAfter(self.AutoSizeColumns)
         wx.CallAfter(self.SendSizeEvent)
         wx.CallAfter(parent.Thaw)
-#        parent.Thaw()
 
     @anythread
     def setSortIndicator(self, columnName, ascending):
@@ -214,7 +214,6 @@ class OlvOwnSortHasIdColumnController(ymvc.Controller):
     def __init__(self, gui, itemsModel):
         super(OlvOwnSortHasIdColumnController, self).__init__(gui)
         self.itemsModel = itemsModel
-        self.statusModel = itemsModel.statusModel
 
         gui.view.bind(self.onViewKwSelectedId)
         gui.view.bind(self.onViewKwDoubleClickId)
@@ -223,48 +222,48 @@ class OlvOwnSortHasIdColumnController(ymvc.Controller):
         self.itemsModel.bind(self.onItemsModelItems)
         self.itemsModel.bind(self.onItemsModelSelectedId)
         self.itemsModel.bind(self.onItemsModelSortDetails)
-        self.statusModel.bind(self.onStatusModelError)
-        self.statusModel.bind(self.onStatusModelStatus)
+        self.itemsModel.bind(self.onStatusModelError)
+        self.itemsModel.bind(self.onStatusModelStatus)
 
-    @ymvc.onNotifyKw('selectedId')
+    @ymvc.onKwSignal
     def onViewKwSelectedId(self, selectedId):
         self.itemsModel.selectedId = selectedId
 
-    @ymvc.onNotifyKw('doubleClickedId')
+    @ymvc.onKwSignal
     def onViewKwDoubleClickId(self, doubleClickedId):
         self.itemsModel.notifyKw(doubleClickedId=doubleClickedId)
 
-    @ymvc.onNotifyKw('sortColumnName', 'sortAscending')
+    @ymvc.onKwSignal
     def onViewKwSortColumnAscending(self, sortColumnName, sortAscending):
         self.itemsModel.notifyKw(changeSortDetails=[[sortColumnName,
                                                     sortAscending]])
 
-    @ymvc.onAttr('items')
+    @ymvc.onAttrSignal
     def onItemsModelItems(self, items):
         if self.gui:
             self.gui.SetObjects(items)
 
-    @ymvc.onAttr('selectedId')
+    @ymvc.onAttrSignal
     def onItemsModelSelectedId(self, selectedId):
         if self.gui:
             self.gui.selectId(selectedId)
 
-    @ymvc.onAttr('sortDetails')
+    @ymvc.onAttrSignal
     def onItemsModelSortDetails(self, sortDetails):
         if self.gui:
             sortName, ascending = sortDetails[0]
             self.gui.setSortIndicator(sortName, ascending)
 
-    @ymvc.onAttr('error')
+    @ymvc.onAttrSignal
     def onStatusModelError(self, error):
         if self.gui:
             if error:
                 self.gui.SetEmptyListMsg(error)
 
-    @ymvc.onAttr('status')
+    @ymvc.onAttrSignal
     def onStatusModelStatus(self, status):
         if self.gui:
-            if status == self.statusModel.STATUS_ACCESSING_DATA:
+            if status == data_models.STATUS_ACCESSING_DATA:
                 self.gui.modeAccessingData()
 
 
@@ -314,11 +313,11 @@ if __name__ == '__main__':
             self.itemsModel.bind(self.onChangeSortDetails)
             self.itemsModel.bind(self.onDoubleClickedId)
 
-        @ymvc.onNotifyKw('changeSortDetails')
+        @ymvc.onKwSignal
         def onChangeSortDetails(self, changeSortDetails):
             self.itemsModel.sortDetails = changeSortDetails
 
-        @ymvc.onNotifyKw('doubleClickedId')
+        @ymvc.onKwSignal
         def onDoubleClickedId(self, doubleClickedId):
             print 'doubleClickedId:', doubleClickedId
 

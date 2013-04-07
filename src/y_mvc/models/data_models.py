@@ -6,30 +6,36 @@ Created on 1 Apr 2013
 
 from y_mvc import ymvc
 
+STATUS_OK = 'Ok'
+STATUS_ACCESSING_DATA = 'Accessing Data'
+STATUS_MODIFYING_DATA = 'Modifying Data'
+STATUS_SAVING_DATA = 'Saving Data'
+STATUS_CHECKING_DATA = 'Checking Data'
+STATUS_ERROR = 'Data Error'
 
-class StatusModel(ymvc.Model):
-    STATUS_OK = 'Ok'
-    STATUS_ACCESSING_DATA = 'Accessing Data'
-    STATUS_MODIFYING_DATA = 'Modifying Data'
-    STATUS_SAVING_DATA = 'Saving Data'
-    STATUS_CHECKING_DATA = 'Checking Data'
-    STATUS_ERROR = 'Data Error'
 
-    def __init__(self, status='Ok', error=''):
-        super(StatusModel, self).__init__('status', 'error')
+class BaseDataModel(ymvc.Model):
+
+    def __init__(self, status=STATUS_OK, error=''):
+        super(BaseDataModel, self).__init__()
+        self.addObsAttrs('status', 'error')
         self.status = status
         self.error = error
 
 
-class ItemsModel(ymvc.Model):
+class ItemsModel(BaseDataModel):
     '''Keyword Notifications
         'changeSortDetails' - call another model to update items based on
                               sortDetails
         'doubleClickedId' - Inform of doubleClickId action
     '''
     def __init__(self, items=None, selectedId=None, sortDetails=None):
-        super(ItemsModel, self).__init__('items', 'selectedId', 'sortDetails')
+        super(ItemsModel, self).__init__()
+        self.addObsAttrs('items', 'selectedId', 'sortDetails')
         self.items = items or []
         self.selectedId = selectedId
         self.sortDetails = sortDetails or (('', True),)
-        self.statusModel = StatusModel()
+
+    def requestChangeSortDetails(self, sortDetails):
+        '''call another model to update items based on sortDetails'''
+        self.notifyKw(changeSortDetails=sortDetails)

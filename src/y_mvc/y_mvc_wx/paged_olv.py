@@ -60,10 +60,10 @@ class PagedOlv(GaugeFrame):
         self.Close()
 
     def onBtnNew(self, event):
-        self.view.notify('New')
+        self.view.notifyMsg('New')
 
     def onBtnEdit(self, event):
-        self.view.notify('Edit')
+        self.view.notifyMsg('Edit')
 
     def onBtnEditUpdate(self, event):
         event.Enable(bool(self.ctrlOlv.selectedId))
