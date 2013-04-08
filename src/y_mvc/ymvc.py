@@ -4,15 +4,19 @@ Created on 24 Mar 2013
 @author: Dave Wilson
 '''
 
-from y_signal.ysignal import Ysignal
 from functools import wraps
+from y_signal.ysignal import Ysignal
 import inspect
+import weakref
 
 _SIGNAL = 'uniqueSignalKeyName'
 _SIGNAL_ATTR = 'Attr'
 _SIGNAL_MSG = 'Msg'
 _SIGNAL_KW = 'Kw'
 _SIGNAL_MSGKW = 'MsgKw'
+
+_globalSignal = Ysignal(True)
+_modelStore = {}
 
 
 def messageSignal(message):
@@ -147,15 +151,17 @@ class YmvcBase(object):
 
 
 class View(YmvcBase):
-    '''Communicates from your view to the controller'''
+    '''Communicates from your view to a Mediator'''
     def __init__(self, gui):
         super(View, self).__init__(False)
         self.gui = gui
-        self.controller = None
+        self.mediator = None
 
-    def setController(self, controller, *args, **kwargs):
-        '''Set the controller related to this view'''
-        self.controller = controller(self.gui, *args, **kwargs)
+    def setMediator(self, mediator):
+        '''Set the Mediator to use with this view'''
+        self.mediator = mediator
+        mediator.gui = self.gui
+        mediator.view = weakref.ref(self, mediator._onViewDestroyed)
 
 
 class Model(YmvcBase):
@@ -165,6 +171,7 @@ class Model(YmvcBase):
         '''Initialise'''
         super(Model, self).__init__()
         self._signaledAttrs = set()
+        self.modelStore = _modelStore
 
     def addObsAttrs(self, *attributes):
         self._signaledAttrs.update(set(attributes))
@@ -207,8 +214,19 @@ class Model(YmvcBase):
         return self._ySignal.emitSlot(slot, **kwargs)
 
 
-class Controller(object):
-    '''Communicates between a view and models'''
-    def __init__(self, gui, *args, **kwargs):
-        '''Sets up the view/controller pairing'''
-        self.gui = gui
+class Mediator(YmvcBase):
+    '''Mediates between a view and models and can send/receive signals to/from
+    other mediator's'''
+    def __init__(self, uniqueName):
+        '''Initialise attributes'''
+        self._ySignal = _globalSignal
+        self.uniqueName = uniqueName
+        self.gui = None
+        self.view = None
+        self.modelStore = _modelStore
+
+    def _onViewDestroyed(self, *args, **kwargs):
+        self.onViewDestroyed()
+
+    def onViewDestroyed(self):
+        '''Overwrite if an action is required when the view is destroyed'''

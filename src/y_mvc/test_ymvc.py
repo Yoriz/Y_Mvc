@@ -121,10 +121,14 @@ class TestModel(unittest.TestCase):
         self.model.attr3 = 'Altered'
         self.assertEqual('Altered', self.model.attr3)
 
+    def testHasModelStore(self):
+        self.assertIs(ymvc._modelStore, self.model.modelStore)
 
-class TestController(unittest.TestCase):
+
+class TestViewAndMediator(unittest.TestCase):
 
     def setUp(self):
+        self.viewDestroyed = False
 
         class Gui(object):
             def __init__(self):
@@ -132,9 +136,18 @@ class TestController(unittest.TestCase):
 
         self.gui = Gui()
 
-    def testCreateController(self):
-        controller = ymvc.Controller(self.gui)
-        self.assertEqual(self.gui, controller.gui)
+    def onViewDestroyed(self):
+        self.viewDestroyed = True
+
+    def testViewSetMediator(self):
+        mediator = ymvc.Mediator('Mediator1')
+        mediator.onViewDestroyed = self.onViewDestroyed
+        self.gui.view.setMediator(mediator)
+        self.assertIs(self.gui, mediator.gui)
+        self.assertIs(ymvc._modelStore, mediator.modelStore)
+        self.assertIs(self.gui.view, mediator.view())
+        del self.gui.view
+        self.assertEqual(True, self.viewDestroyed)
 
 
 if __name__ == '__main__':
