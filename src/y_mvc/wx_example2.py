@@ -43,13 +43,16 @@ class MainFrame(wx.Frame):
         self.btn.Enable(enabled)
 
 
-class MainFrameController(ymvc.Controller):
+class MainFrameMediator(ymvc.Mediator):
 
-    def __init__(self, gui, delayedModel):
-        super(MainFrameController, self).__init__(gui)
-        self.delayedModel = delayedModel
+    def __init__(self, uniqueName):
+        super(MainFrameMediator, self).__init__(uniqueName)
 
-        self.gui.view.bind(self.onViewStart)
+    def onCreateBinds(self):
+
+        self.delayedModel = self.modelStore['delayedModel']
+
+        self.view.bind(self.onViewStart)
         self.delayedModel.bind(self.onDelayedModelBusy)
         self.delayedModel.bind(self.onDelayedModelValue)
 
@@ -84,9 +87,9 @@ class DelayedModel(ymvc.Model):
 
 
 if __name__ == '__main__':
-    delayedModel = DelayedModel()
+    ymvc.modelStore['delayedModel'] = DelayedModel()
     wxapp = wx.App(False)
     mainFrame = MainFrame(None)
-    mainFrame.view.setController(MainFrameController, delayedModel)
+    mainFrame.view.setMediator(MainFrameMediator('MainFrameMediator'))
     mainFrame.Show()
     wxapp.MainLoop()
