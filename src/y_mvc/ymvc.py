@@ -16,7 +16,7 @@ _SIGNAL_KW = 'Kw'
 _SIGNAL_MSGKW = 'MsgKw'
 
 _globalSignal = Ysignal(True)
-_modelStore = {}
+modelStore = {}
 
 
 def messageSignal(message):
@@ -161,7 +161,8 @@ class View(YmvcBase):
         '''Set the Mediator to use with this view'''
         self.mediator = mediator
         mediator.gui = self.gui
-        mediator.view = weakref.ref(self, mediator._onViewDestroyed)
+        mediator.view = weakref.proxy(self, mediator._onViewDestroyed)
+        mediator.onCreateBinds()
 
 
 class Model(YmvcBase):
@@ -171,7 +172,7 @@ class Model(YmvcBase):
         '''Initialise'''
         super(Model, self).__init__()
         self._signaledAttrs = set()
-        self.modelStore = _modelStore
+        self.modelStore = modelStore
 
     def addObsAttrs(self, *attributes):
         self._signaledAttrs.update(set(attributes))
@@ -223,7 +224,11 @@ class Mediator(YmvcBase):
         self.uniqueName = uniqueName
         self.gui = None
         self.view = None
-        self.modelStore = _modelStore
+        self.modelStore = modelStore
+
+    def onCreateBinds(self):
+        '''Overwrite this method with required binds, will be called when set
+        to a view'''
 
     def _onViewDestroyed(self, *args, **kwargs):
         self.onViewDestroyed()

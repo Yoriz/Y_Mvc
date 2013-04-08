@@ -68,13 +68,15 @@ class MainFrame(wx.Frame):
         return frame
 
 
-class MainFrameController(ymvc.Controller):
-    def __init__(self, gui, attrModel):
-        super(MainFrameController, self).__init__(gui)
-        self.attrModel = attrModel
-        self.gui.view.bind(self.onViewAttr1)
-        self.gui.view.bind(self.onViewAttr2)
-        self.gui.view.bind(self.onOpen)
+class MainFrameMediator(ymvc.Mediator):
+    def __init__(self):
+        super(MainFrameMediator, self).__init__('MainFrame')
+
+    def onCreateBinds(self):
+        self.attrModel = self.modelStore['attrModel']
+        self.view.bind(self.onViewAttr1)
+        self.view.bind(self.onViewAttr2)
+        self.view.bind(self.onOpen)
         self.attrModel.bind(self.onAttrModelAttr1)
         self.attrModel.bind(self.onAttrModelAttr2)
 
@@ -89,7 +91,7 @@ class MainFrameController(ymvc.Controller):
     @ymvc.onMsgSignal('Open')
     def onOpen(self):
         frame = self.gui.createFrame()
-        frame.view.setController(MainFrameController, attrModel)
+        frame.view.setMediator(MainFrameMediator())
 
     @ymvc.onAttrSignal
     def onAttrModelAttr1(self, attr1):
@@ -98,6 +100,9 @@ class MainFrameController(ymvc.Controller):
     @ymvc.onAttrSignal
     def onAttrModelAttr2(self, attr2):
         self.gui.setAttr2(attr2)
+
+    def onViewDestroyed(self):
+        print 'ViewDestroyed'
 
 
 class AttrModel(ymvc.Model):
@@ -111,10 +116,9 @@ class AttrModel(ymvc.Model):
 
 if __name__ == '__main__':
 
-    attrModel = AttrModel('Attr1', 'Attr2')
-
+    ymvc.modelStore['attrModel'] = AttrModel('Attr1', 'Attr2')
     wxapp = wx.App(False)
     mainFrame = MainFrame(None)
-    mainFrame.view.setController(MainFrameController, attrModel)
+    mainFrame.view.setMediator(MainFrameMediator())
     mainFrame.Show()
     wxapp.MainLoop()
