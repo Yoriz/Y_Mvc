@@ -17,6 +17,7 @@ _SIGNAL_MSGKW = 'MsgKw'
 
 _globalSignal = Ysignal(True)
 modelStore = {}
+weakModelStore = weakref.WeakValueDictionary()
 
 
 def messageSignal(message):
