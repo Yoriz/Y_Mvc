@@ -12,7 +12,7 @@ import ymvc
 MAIN_FRAME = 'MainFrame'
 CHILD_FRAME1 = 'ChildFrame1'
 CHILD_FRAME2 = 'ChildFrame2'
-CHILD_FRAME3 = 'ChildFrame2'
+CHILD_FRAME3 = 'ChildFrame3'
 
 
 class MainFrame(wx.Frame):
@@ -53,9 +53,9 @@ class MainFrame(wx.Frame):
         self.Layout()
 
         self.btn.Bind(wx.EVT_BUTTON, self.onBtn)
-        self.btn1.Bind(wx.EVT_BUTTON, self.onBtn)
-        self.btn2.Bind(wx.EVT_BUTTON, self.onBtn)
-        self.btn3.Bind(wx.EVT_BUTTON, self.onBtn)
+        self.btn1.Bind(wx.EVT_BUTTON, self.onButton1)
+        self.btn2.Bind(wx.EVT_BUTTON, self.onButton2)
+        self.btn3.Bind(wx.EVT_BUTTON, self.onButton3)
 
     def createControls(self, parent, sizer, number):
         stcTxtA = wx.StaticText(parent,
@@ -67,15 +67,16 @@ class MainFrame(wx.Frame):
         setattr(self, 'stcTxtB{}'.format(number), stcTxtB)
 
     def onBtn(self, event):
-        if event.EventObject == self.btn:
-            value = self.txtCtrl.GetValue()
-            self.view.notifyKw(txtCtrl=value)
-        elif event.EventObject == self.btn1:
-            self.view.notifyMsg('Button1')
-        elif event.EventObject == self.btn2:
-            self.view.notifyMsg('Button2')
-        elif event.EventObject == self.btn3:
-            self.view.notifyMsg('Button3')
+        self.view.notifyKw(text1=self.txtCtrl.GetValue())
+
+    def onButton1(self, event):
+        self.view.notifyMsg('Button1')
+
+    def onButton2(self, event):
+        self.view.notifyMsg('Button2')
+
+    def onButton3(self, event):
+        self.view.notifyMsg('Button3')
 
     @anythread
     def setStcTxtB(self, number, value):
@@ -98,47 +99,65 @@ class MainFrameMediator(ymvc.Mediator):
         super(MainFrameMediator, self).__init__(MAIN_FRAME)
 
     def onCreateBinds(self):
-        self.view.bind(self.onTxtCtrl)
-        self.view.bind(self.onBtn1)
-        self.view.bind(self.onBtn2)
-        self.view.bind(self.onBtn3)
-        self.bind(self.onTxt1)
-        self.bind(self.onTxt2)
-        self.bind(self.onTxt2)
+        self.view.bind(self.onText1)
+        self.view.bind(self.onButton1)
+        self.view.bind(self.onButton2)
+        self.view.bind(self.onButton3)
+        self.bind(self.onChild1Text)
+        self.bind(self.onChild1Destroyed)
+        self.bind(self.onChild2Text)
+        self.bind(self.onChild2Destroyed)
+        self.bind(self.onChild3Text)
+        self.bind(self.onChild3Destroyed)
 
     @ymvc.onKwSignal
-    def onTxtCtrl(self, txtCtrl):
-        self.notifyMsgKw(MAIN_FRAME, value=txtCtrl)
+    def onText1(self, text1):
+        self.notifyMsgKw(MAIN_FRAME, value=text1)
 
     @ymvc.onMsgSignal('Button1')
-    def onBtn1(self):
+    def onButton1(self):
         frame = self.gui.createChildFrame(1, 2, 3)
         self.gui.btnEnable(1, False)
-        frame.view.setMediator(ChildFrameMediator(CHILD_FRAME1))
+        frame.view.setMediator(ChildFrameMediator(MAIN_FRAME + CHILD_FRAME1))
 
     @ymvc.onMsgSignal('Button2')
-    def onBtn2(self):
+    def onButton2(self):
         frame = self.gui.createChildFrame(2, 3, 1)
         self.gui.btnEnable(2, False)
-        frame.view.setMediator(ChildFrameMediator(CHILD_FRAME2))
+        frame.view.setMediator(ChildFrameMediator(MAIN_FRAME + CHILD_FRAME2))
 
     @ymvc.onMsgSignal('Button3')
-    def onBtn3(self):
+    def onButton3(self):
         frame = self.gui.createChildFrame(3, 1, 2)
         self.gui.btnEnable(3, False)
-        frame.view.setMediator(ChildFrameMediator(CHILD_FRAME3))
+        frame.view.setMediator(ChildFrameMediator(MAIN_FRAME + CHILD_FRAME3))
 
-    @ymvc.onMsgKwSignal(CHILD_FRAME1)
-    def onTxt1(self, value):
-        self.gui.setStcTxtB(1, value)
+    @ymvc.onMsgKwSignal(MAIN_FRAME + CHILD_FRAME1)
+    def onChild1Text(self, text):
+        self.gui.setStcTxtB(1, text)
 
-    @ymvc.onMsgKwSignal(CHILD_FRAME2)
-    def onTxt2(self, value):
-        self.gui.setStcTxtB(2, value)
+    @ymvc.onMsgSignal(MAIN_FRAME + CHILD_FRAME1 + 'Destroyed')
+    def onChild1Destroyed(self):
+        if self.gui:
+            self.gui.btnEnable(1, True)
 
-    @ymvc.onMsgKwSignal(CHILD_FRAME3)
-    def onTxt3(self, value):
-        self.gui.setStcTxtB(3, value)
+    @ymvc.onMsgKwSignal(MAIN_FRAME + CHILD_FRAME2)
+    def onChild2Text(self, text):
+        self.gui.setStcTxtB(2, text)
+
+    @ymvc.onMsgSignal(MAIN_FRAME + CHILD_FRAME2 + 'Destroyed')
+    def onChild2Destroyed(self):
+        if self.gui:
+            self.gui.btnEnable(2, True)
+
+    @ymvc.onMsgKwSignal(MAIN_FRAME + CHILD_FRAME3)
+    def onChild3Text(self, text):
+        self.gui.setStcTxtB(3, text)
+
+    @ymvc.onMsgSignal(MAIN_FRAME + CHILD_FRAME3 + 'Destroyed')
+    def onChild3Destroyed(self):
+        if self.gui:
+            self.gui.btnEnable(3, True)
 
 
 class BaseChildFrame(wx.Frame):
@@ -194,11 +213,13 @@ class BaseChildFrame(wx.Frame):
 
     def onBtn(self, event):
         if event.EventObject == self.btn1:
-            self.view.notifyKw(txtCtrl1=event.String)
+            self.view.notifyKw(text1=self.txtCtrl1.GetValue())
+
         elif event.EventObject == self.btn2:
-            self.view.notifyKw(txtCtrl2=event.String)
+            self.view.notifyKw(text2=self.txtCtrl2.GetValue())
+
         elif event.EventObject == self.btn3:
-            self.view.notifyKw(txtCtrl3=event.String)
+            self.view.notifyKw(text3=self.txtCtrl3.GetValue())
 
     @anythread
     def setStcTxtB(self, number, value):
@@ -211,40 +232,66 @@ class ChildFrameMediator(ymvc.Mediator):
         super(ChildFrameMediator, self).__init__(uniqueName)
 
     def onCreateBinds(self):
-#         self.view.bind(self.onBtn1)
-#         self.view.bind(self.onBtn2)
-#         self.view.bind(self.onBtn3)
+        self.view.bind(self.onText1)
+        self.view.bind(self.onText2)
+        self.view.bind(self.onText3)
         self.bind(self.onMainFrameTxt)
-#         self.bind(self.onTxt2)
-#         self.bind(self.onTxt2)
+        self.bind(self.onChild1Text2)
+        self.bind(self.onChild2Text2)
+        self.bind(self.onChild3Text2)
+        self.bind(self.onChild1Text3)
+        self.bind(self.onChild2Text3)
+        self.bind(self.onChild3Text3)
 
-    @ymvc.onMsgSignal('Button1')
-    def onBtn1(self):
-        frame = self.gui.createChildFrame(1, 2, 3)
-        self.gui.btnEnable(1, False)
+    def onViewDestroyed(self):
+        msg = self.uniqueName + 'Destroyed'
+        self.notifyMsg(msg)
 
-    @ymvc.onMsgSignal('Button2')
-    def onBtn2(self):
-        frame = self.gui.createChildFrame(2, 3, 1)
-        self.gui.btnEnable(2, False)
+    @ymvc.onKwSignal
+    def onText1(self, text1):
+        self.notifyMsgKw(self.uniqueName, text=text1)
 
-    @ymvc.onMsgSignal('Button3')
-    def onBtn3(self):
-        frame = self.gui.createChildFrame(3, 1, 2)
-        self.gui.btnEnable(3, False)
+    @ymvc.onKwSignal
+    def onText2(self, text2):
+        self.notifyMsgKw(self.uniqueName, text2=text2)
+
+    @ymvc.onKwSignal
+    def onText3(self, text3):
+        self.notifyMsgKw(self.uniqueName, text3=text3)
 
     @ymvc.onMsgKwSignal(MAIN_FRAME)
     def onMainFrameTxt(self, value):
         self.gui.setStcTxtB(1, value)
 
-    @ymvc.onMsgKwSignal('CHILD_FRAME2')
-    def onTxt2(self, value):
-        self.gui.setStcTxtB(2, value)
+    @ymvc.onMsgKwSignal(MAIN_FRAME + CHILD_FRAME1)
+    def onChild1Text2(self, text2):
+        if self.uniqueName == MAIN_FRAME + CHILD_FRAME2:
+            self.gui.setStcTxtB(3, text2)
 
-    @ymvc.onMsgKwSignal('CHILD_FRAME3')
-    def onTxt3(self, value):
-        self.gui.setStcTxtB(3, value)
+    @ymvc.onMsgKwSignal(MAIN_FRAME + CHILD_FRAME2)
+    def onChild2Text2(self, text2):
+        if self.uniqueName == MAIN_FRAME + CHILD_FRAME3:
+            self.gui.setStcTxtB(3, text2)
 
+    @ymvc.onMsgKwSignal(MAIN_FRAME + CHILD_FRAME3)
+    def onChild3Text2(self, text2):
+        if self.uniqueName == MAIN_FRAME + CHILD_FRAME1:
+            self.gui.setStcTxtB(3, text2)
+
+    @ymvc.onMsgKwSignal(MAIN_FRAME + CHILD_FRAME1)
+    def onChild1Text3(self, text3):
+        if self.uniqueName == MAIN_FRAME + CHILD_FRAME3:
+            self.gui.setStcTxtB(2, text3)
+
+    @ymvc.onMsgKwSignal(MAIN_FRAME + CHILD_FRAME2)
+    def onChild2Text3(self, text3):
+        if self.uniqueName == MAIN_FRAME + CHILD_FRAME1:
+            self.gui.setStcTxtB(2, text3)
+
+    @ymvc.onMsgKwSignal(MAIN_FRAME + CHILD_FRAME3)
+    def onChild3Text3(self, text3):
+        if self.uniqueName == MAIN_FRAME + CHILD_FRAME2:
+            self.gui.setStcTxtB(2, text3)
 
 if __name__ == '__main__':
 
