@@ -11,6 +11,11 @@ from ObjectListView import ObjectListView, ColumnDefn
 from wxAnyThread import anythread
 from y_mvc import ymvc
 from y_mvc.models import data_model
+from y_mvc.models.data_model import ItemsModel
+from collections import namedtuple
+
+DOUBLE_CLICKED = 'DoubleClicked'
+SORT_CHANGED = 'SortChanged'
 
 
 class OlvCtrl(ObjectListView, ListCtrlAutoWidthMixin):
@@ -212,14 +217,16 @@ class OlvCtrl(ObjectListView, ListCtrlAutoWidthMixin):
 #        self.Enable(False)
 
 
-class OlvCtrlController(ymvc.Controller):
-    def __init__(self, gui, itemsModel):
-        super(OlvCtrlController, self).__init__(gui)
-        self.itemsModel = itemsModel
+class OlvCtrlMediator(ymvc.Mediator):
+    def __init__(self, uniqueName):
+        super(OlvCtrlMediator, self).__init__(uniqueName)
 
-        gui.view.bind(self.onViewKwSelectedId)
-        gui.view.bind(self.onViewKwDoubleClickId)
-        gui.view.bind(self.onViewKwSortColumnAscending)
+    def onCreateBinds(self):
+        self.itemsModel = self.modelStore[self.uniqueName + 'itemsModel']
+
+        self.view.bind(self.onViewKwSelectedId)
+        self.view.bind(self.onViewKwDoubleClickId)
+        self.view.bind(self.onViewKwSortColumnAscending)
 
         self.itemsModel.bind(self.onItemsModelItems)
         self.itemsModel.bind(self.onItemsModelSelectedId)
@@ -233,12 +240,14 @@ class OlvCtrlController(ymvc.Controller):
 
     @ymvc.onKwSignal
     def onViewKwDoubleClickId(self, doubleClickedId):
-        self.itemsModel.notifyKw(doubleClickedId=doubleClickedId)
+        self.notifyMsgKw(self.uniqueName + DOUBLE_CLICKED,
+                         selectedId=doubleClickedId)
 
     @ymvc.onKwSignal
     def onViewKwSortColumnAscending(self, sortColumnName, sortAscending):
-        self.itemsModel.notifyKw(changeSortDetails=[[sortColumnName,
-                                                    sortAscending]])
+        SortDetails = ((sortColumnName, sortAscending),)
+        self.notifyMsgKw(self.uniqueName + SORT_CHANGED,
+                         SortDetails=SortDetails)
 
     @ymvc.onAttrSignal
     def onItemsModelItems(self, items):
@@ -269,60 +278,38 @@ class OlvCtrlController(ymvc.Controller):
                 self.gui.modeAccessingData()
 
 
-if __name__ == '__main__':
-    from collections import namedtuple
-    from y_mvc.models.data_model import ItemsModel
+class TestAppMediator(ymvc.Mediator):
+    def __init__(self, uniqueName):
+        super(TestAppMediator, self).__init__(uniqueName)
 
-    DataItem = namedtuple('DataItem', 'id customerName partNumber')
-    items = [DataItem(1, 'Apph', '1234'),
-            DataItem(2, 'Shorts', '5678')]
-    items = [DataItem(index, 'name{}'.format(index), 'part{}'.format(index))
-            for index in xrange(1, 1000)]
-    app = wx.App(False)
+        DataItem = namedtuple('DataItem', 'id customerName partNumber')
+        items = [DataItem(index, 'name{}'.format(index),
+                          'part{}'.format(index)) for index in xrange(1, 1000)]
 
-    columns = [ColumnDefn(title="",
+        self.itemsModel = ItemsModel(items=items)
+        self.modelStore[self.uniqueName + 'itemsModel'] = self.itemsModel
+
+
+class TestFrame(wx.Frame):
+    def __init__(self, *args, **kwargs):
+        super(TestFrame, self).__init__(*args, **kwargs)
+        self.olvCtrl = OlvCtrl(self)
+
+        columns = [ColumnDefn(title="",
                       valueGetter="", maximumWidth=0),
                ColumnDefn(title="Customer name",
                               valueGetter="customerName", minimumWidth=150),
                ColumnDefn(title="Part Number", valueGetter="partNumber",
                               minimumWidth=150)]
+        self.olvCtrl.SetColumns(columns)
+        self.Show()
 
-    def makeFrame(itemsModel):
-        frame = wx.Frame(None)
-#        frame.SetInitialSize((800, 600))
-        panel = wx.Panel(frame)
-        sizer = wx.BoxSizer(wx.VERTICAL)
-        panel.SetSizer(sizer)
-        olv = OlvCtrl(panel)
-        sizer.Add(olv, 1, wx.ALL | wx.EXPAND, 7)
-        olv.SetColumns(columns)
-        olv.view.setController(OlvCtrlController, itemsModel)
-        frame.Show()
-        frame.olv = olv
-        olv.SendSizeEvent()
-        return frame
 
-    itemsModel = ItemsModel(items, selectedId=2)
-    for i in xrange(5):
-        makeFrame(itemsModel)
-
-    sortDetail = ('customerName', True)
-    itemsModel.sortDetails = (sortDetail,)
-
-    class Requests(object):
-        def __init__(self, itemsModel):
-            self.itemsModel = itemsModel
-            self.itemsModel.bind(self.onChangeSortDetails)
-            self.itemsModel.bind(self.onDoubleClickedId)
-
-        @ymvc.onKwSignal
-        def onChangeSortDetails(self, changeSortDetails):
-            self.itemsModel.sortDetails = changeSortDetails
-
-        @ymvc.onKwSignal
-        def onDoubleClickedId(self, doubleClickedId):
-            print 'doubleClickedId:', doubleClickedId
-
-    requests = Requests(itemsModel)
-
+if __name__ == '__main__':
+    app = wx.App(False)
+    testFrame = TestFrame(None)
+    uniqueName = 'TestOlv'
+    testAppMediator = TestAppMediator(uniqueName)
+    mediator = OlvCtrlMediator(uniqueName)
+    testFrame.olvCtrl.view.setMediator(mediator)
     app.MainLoop()

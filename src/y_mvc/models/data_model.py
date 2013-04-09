@@ -24,16 +24,9 @@ class BaseDataModel(ymvc.Model):
 
 
 class ItemsModel(BaseDataModel):
-    '''Keyword Notifications
-        'doubleClickedId' - Inform of doubleClickId action
-    '''
     def __init__(self, items=None, selectedId=None, sortDetails=None):
         super(ItemsModel, self).__init__()
         self.addObsAttrs('items', 'selectedId', 'sortDetails')
         self.items = items or []
         self.selectedId = selectedId
         self.sortDetails = sortDetails or (('', True),)
-
-    def requestChangeSortDetails(self, sortDetails):
-        '''call another model to update items based on sortDetails'''
-        self.notifyKw(changeSortDetails=sortDetails)
