@@ -24,8 +24,6 @@ class PageModel(ymvc.Model):
         self.lastPageNo = lastPageNo
         self.pageDetails = pageDetails
 
-        self.bind(self.onRequestPageNo)
-
     @property
     def pageNo(self):
         return self._pageNo
@@ -38,10 +36,3 @@ class PageModel(ymvc.Model):
         self.lastPageNo = page.numPages
         self._pageNo = page.pageNo
         self.pageDetails = page.details
-
-    def requestPageNo(self, pageNo):
-        self.notifyKw(requestPageNo=pageNo)
-
-    @ymvc.onKwSignal
-    def onRequestPageNo(self, requestPageNo):
-        print 'Requested pageNo:', requestPageNo

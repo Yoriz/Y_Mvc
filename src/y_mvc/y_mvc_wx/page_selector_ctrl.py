@@ -9,6 +9,8 @@ from wxAnyThread import anythread
 from wx.lib.intctrl import IntCtrl
 from y_mvc import ymvc
 
+REQUEST_PAGE_NO = 'RequestPageNo'
+
 
 def createBtn(parent, pSizer, label, tipText, handler, updateHandler=None):
     font = wx.Font(11, wx.SWISS, wx.NORMAL, wx.NORMAL, False, u'Webdings')
@@ -115,43 +117,46 @@ class PageSelectorCtrl(wx.Panel):
         self.GetParent().Layout()
 
 
-class PageSelectorController(ymvc.Controller):
-    def __init__(self, gui, pageModel):
-        super(PageSelectorController, self).__init__(gui)
-        self.pageModel = pageModel
+class PageSelectorMediator(ymvc.Mediator):
+    def __init__(self, uniqueName):
+        super(PageSelectorMediator, self).__init__(uniqueName)
 
-        self.gui.view.bind(self.onViewPageNo)
+    def onCreateBinds(self):
+        self.pageModel = self.modelStore[self.uniqueName + 'pageModel']
 
-        self.pageModel.bind(self.onpageSelectorModelLastPageNo)
-        self.pageModel.bind(self.onpageSelectorModelPageNo)
-        self.pageModel.bind(self.onpageSelectorModelPageDetails)
+        self.view.bind(self.onViewPageNo)
+
+        self.pageModel.bind(self.onpageModelLastPageNo)
+        self.pageModel.bind(self.onpageModelPageNo)
+        self.pageModel.bind(self.onpageModelPageDetails)
 
     @ymvc.onKwSignal
     def onViewPageNo(self, pageNo):
-        self.pageModel.requestPageNo(pageNo)
+        self.notifyMsgKw(self.uniqueName + REQUEST_PAGE_NO, pageNo=pageNo)
 
     @ymvc.onKwSignal
-    def onpageSelectorModelPageNo(self, pageNo):
+    def onpageModelPageNo(self, pageNo):
         self.gui.setPageNo(pageNo)
 
     @ymvc.onAttrSignal
-    def onpageSelectorModelLastPageNo(self, lastPageNo):
+    def onpageModelLastPageNo(self, lastPageNo):
         self.gui.setLastPageNo(lastPageNo)
 
     @ymvc.onAttrSignal
-    def onpageSelectorModelPageDetails(self, pageDetails):
+    def onpageModelPageDetails(self, pageDetails):
         self.gui.setPageDetails(pageDetails)
 
 
-class GetRecordsTestModel(ymvc.Model):
-    def __init__(self, pageModel):
-        super(GetRecordsTestModel, self).__init__()
-        self.pageModel = pageModel
+class RecordsTestModel(ymvc.Model):
+    def __init__(self, uniqueName):
+        super(RecordsTestModel, self).__init__()
+        self.uniqueName = uniqueName
+        self.pageModel = self.modelStore[uniqueName + 'pageModel']
         self.numRecords = 2500
         self.onPageSelectorModelRequestPageNo(1)
 
-        pageModel.bind(self.onPageSelectorModelRequestPageNo)
-        pageModel.bind(self.onPageSelectorModelLimitOffset)
+        self.pageModel.bind(self.onPageSelectorModelRequestPageNo)
+        self.pageModel.bind(self.onPageModelLimitOffset)
 
     @ymvc.onKwSignal
     def onPageSelectorModelRequestPageNo(self, requestPageNo):
@@ -159,18 +164,35 @@ class GetRecordsTestModel(ymvc.Model):
         self.pageModel.pageNo = requestPageNo
 
     @ymvc.onKwSignal
-    def onPageSelectorModelLimitOffset(self, limit, offset):
+    def onPageModelLimitOffset(self, limit, offset):
         print 'Requested database records limit: {}, offset: {}'.format(limit,
                                                                         offset)
 
+
+class TestAppMediator(ymvc.Mediator):
+    def __init__(self, uniqueName):
+        super(TestAppMediator, self).__init__(uniqueName)
+        self.pageModel = PageModel()
+        self.modelStore[uniqueName + 'pageModel'] = self.pageModel
+        self.modelStore['recordsTestModel'] = RecordsTestModel(self.uniqueName)
+
+        self.bind(self.onRequestPageNo)
+
+    @ymvc.onMsgKwSignal('TestingPageSelector' + REQUEST_PAGE_NO)
+    def onRequestPageNo(self, pageNo):
+        self.pageModel.numRecords = 2500
+        self.pageModel.pageNo = pageNo
+
+
 if __name__ == '__main__':
     from y_mvc.models.page_model import PageModel
-    pageModel = PageModel()
-    getRecordsTestModel = GetRecordsTestModel(pageModel)
+    uniqueName = 'TestingPageSelector'
+    testAppMediator = TestAppMediator(uniqueName)
     wxapp = wx.App(None)
     frame = wx.Frame(None, title="Testing PageDetails Panel")
     pageSelectorCtrl = PageSelectorCtrl(frame)
-    pageSelectorCtrl.view.setController(PageSelectorController, pageModel)
+    mediator = PageSelectorMediator(uniqueName)
+    pageSelectorCtrl.view.setMediator(mediator)
     fSizer = wx.BoxSizer(wx.VERTICAL)
     fSizer.Add(pageSelectorCtrl)
     frame.SetSizer(fSizer)
