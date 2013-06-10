@@ -95,10 +95,10 @@ class TextChangeCtrl(wx.TextCtrl):
 #     def ChangeValue(self, value):
 #         '''Change the value in the text entry field. Does not generate a
 #         text change event. Maintains insert point'''
-# 
+#
 #         isEmpty = self.IsEmpty()
 #         super(TextChangeCtrl, self).ChangeValue(value)
-# 
+#
 #         if self.FindFocus() == self:
 #             if isEmpty:
 #                 self.SetInsertionPointEnd()

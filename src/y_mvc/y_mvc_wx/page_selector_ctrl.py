@@ -5,7 +5,7 @@ Created on 31 Mar 2013
 '''
 
 import wx
-from wxAnyThread import anythread
+from wx_lib.wxdecorator import wxCallafter
 from wx.lib.intctrl import IntCtrl
 from y_mvc import ymvc
 
@@ -103,15 +103,12 @@ class PageSelectorCtrl(wx.Panel):
     def getlastPageNo(self):
         return self.ctrlPageNo.GetMax()
 
-    @anythread
     def setPageNo(self, value):
         self.ctrlPageNo.ChangeValue(value)
 
-    @anythread
     def setLastPageNo(self, value):
         self.ctrlPageNo.SetMax(value)
 
-    @anythread
     def setPageDetails(self, pageDetails):
         self.ctrlDetails.SetLabel(pageDetails)
         self.GetParent().Layout()
@@ -133,15 +130,19 @@ class PageSelectorMediator(ymvc.Mediator):
     @ymvc.onKwSignal
     def onViewPageNo(self, pageNo):
         self.notifyMsgKw(self.uniqueName + REQUEST_PAGE_NO, pageNo=pageNo)
+        self.pageModel.notifyKw(requestPageNo=pageNo)
 
-    @ymvc.onKwSignal
+    @wxCallafter
+    @ymvc.onAttrSignal
     def onpageModelPageNo(self, pageNo):
         self.gui.setPageNo(pageNo)
 
+    @wxCallafter
     @ymvc.onAttrSignal
     def onpageModelLastPageNo(self, lastPageNo):
         self.gui.setLastPageNo(lastPageNo)
 
+    @wxCallafter
     @ymvc.onAttrSignal
     def onpageModelPageDetails(self, pageDetails):
         self.gui.setPageDetails(pageDetails)

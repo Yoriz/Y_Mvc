@@ -12,7 +12,6 @@ class TestBase(unittest.TestCase):
 
     def setUp(self):
         self.ymvcBase = ymvc.YmvcBase()
-        self.ymvcBase._ySignal.threadPoolExe._max_workers = 1
         self.notifyCalled = False
         self.attr1 = None
         self.attr2 = None

@@ -9,6 +9,7 @@ from y_signal.ysignal import Ysignal
 import inspect
 import weakref
 
+
 _SIGNAL = 'uniqueSignalKeyName'
 _SIGNAL_ATTR = 'Attr'
 _SIGNAL_MSG = 'Msg'
@@ -194,10 +195,9 @@ class Model(YmvcBase):
 
         if name in self._signaledAttrs:
             if self._ySignal.useThread:
-                future = self._ySignal.threadPoolExe.submit(
-                                                self._setattrCall, name, value)
-                future.add_done_callback(self._ySignal.slotCheck)
-                return future
+                self._ySignal.queuedThread.submit(self._setattrCall, name,
+                                                  value)
+
             else:
                 self._setattrCall(name, value)
         else:
@@ -219,7 +219,7 @@ class Model(YmvcBase):
 class Mediator(YmvcBase):
     '''Mediates between a view and models and can send/receive signals to/from
     other mediator's'''
-    def __init__(self, uniqueName):
+    def __init__(self, uniqueName=''):
         '''Initialise attributes'''
         self._ySignal = _globalSignal
         self.uniqueName = uniqueName

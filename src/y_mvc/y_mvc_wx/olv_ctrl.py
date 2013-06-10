@@ -8,7 +8,7 @@ Created on 1 Apr 2013
 import wx
 from wx.lib.mixins.listctrl import ListCtrlAutoWidthMixin
 from ObjectListView import ObjectListView, ColumnDefn
-from wxAnyThread import anythread
+from wx_lib.wxdecorator import wxCallafter
 from y_mvc import ymvc
 from y_mvc.models import data_model
 from y_mvc.models.data_model import ItemsModel
@@ -142,7 +142,6 @@ class OlvCtrl(ObjectListView, ListCtrlAutoWidthMixin):
             headerImage = self.smallImageList.GetImageIndex(headerImage)
         self.SetColumnImage(index, headerImage)
 
-    @anythread
     def SetObjects(self, modelObjects, preserveSelection=False):
         parent = self.GetParent()
         parent.Freeze()
@@ -153,7 +152,6 @@ class OlvCtrl(ObjectListView, ListCtrlAutoWidthMixin):
         wx.CallAfter(self.SendSizeEvent)
         wx.CallAfter(parent.Thaw)
 
-    @anythread
     def setSortIndicator(self, columnName, ascending):
         index = self._getColumnIndex(columnName)
         if index < 0:
@@ -172,7 +170,6 @@ class OlvCtrl(ObjectListView, ListCtrlAutoWidthMixin):
         self.sortAscending = ascending
         parent.Thaw()
 
-    @anythread
     def selectId(self, selectId, ensureVisible=True):
         parent = self.GetParent()
         parent.Freeze()
@@ -191,11 +188,9 @@ class OlvCtrl(ObjectListView, ListCtrlAutoWidthMixin):
         self.Bind(wx.EVT_LIST_ITEM_DESELECTED, self.onListItemDeselection)
         parent.Thaw()
 
-    @anythread
     def SetEmptyListMsg(self, msg):
         super(OlvCtrl, self).SetEmptyListMsg(msg)
 
-    @anythread
     def modeAccessingData(self):
         parent = self.GetParent()
         parent.Freeze()
@@ -249,28 +244,33 @@ class OlvCtrlMediator(ymvc.Mediator):
         self.notifyMsgKw(self.uniqueName + SORT_CHANGED,
                          SortDetails=SortDetails)
 
+    @wxCallafter
     @ymvc.onAttrSignal
     def onItemsModelItems(self, items):
         if self.gui:
             self.gui.SetObjects(items)
 
+    @wxCallafter
     @ymvc.onAttrSignal
     def onItemsModelSelectedId(self, selectedId):
         if self.gui:
             self.gui.selectId(selectedId)
 
+    @wxCallafter
     @ymvc.onAttrSignal
     def onItemsModelSortDetails(self, sortDetails):
         if self.gui:
             sortName, ascending = sortDetails[0]
             self.gui.setSortIndicator(sortName, ascending)
 
+    @wxCallafter
     @ymvc.onAttrSignal
     def onStatusModelError(self, error):
         if self.gui:
             if error:
                 self.gui.SetEmptyListMsg(error)
 
+    @wxCallafter
     @ymvc.onAttrSignal
     def onStatusModelStatus(self, status):
         if self.gui:

@@ -5,7 +5,8 @@ Created on 29 Mar 2013
 '''
 
 import wx
-from wxAnyThread import anythread
+from wx_lib.wxdecorator import wxCallafter
+from util.decorator import runAsync
 import time
 import ymvc
 
@@ -34,11 +35,9 @@ class MainFrame(wx.Frame):
 
         self.btn.Bind(wx.EVT_BUTTON, lambda x: self.view.notifyMsg('Start'))
 
-    @anythread
     def setLabel(self, value):
         self.label1.SetLabel(str(value))
 
-    @anythread
     def setButtonState(self, enabled=True):
         self.btn.Enable(enabled)
 
@@ -60,10 +59,12 @@ class MainFrameMediator(ymvc.Mediator):
     def onViewStart(self):
         self.delayedModel.notifyMsg('StartCount')
 
+    @wxCallafter
     @ymvc.onKwSignal
     def onDelayedModelBusy(self, busy):
         self.gui.setButtonState(not busy)
 
+    @wxCallafter
     @ymvc.onAttrSignal
     def onDelayedModelValue(self, value):
         self.gui.setLabel(value)
@@ -76,12 +77,14 @@ class DelayedModel(ymvc.Model):
         self.bind(self.startCount)
         self.value = 0
 
+    @runAsync
     @ymvc.onMsgSignal('StartCount')
     def startCount(self):
         self.notifyKw(busy=True)
         for number in xrange(1, 11):
             time.sleep(1)
             self.value = number
+            print self.value
         self.value = 0
         self.notifyKw(busy=False)
 

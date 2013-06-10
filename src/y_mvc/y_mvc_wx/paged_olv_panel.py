@@ -6,8 +6,8 @@ Created on 5 Apr 2013
 
 import wx
 from y_mvc import ymvc
-from olv_ctrl import OlvCtrl, OlvCtrlController
-from page_selector_ctrl import PageSelectorCtrl, PageSelectorController
+from olv_ctrl import OlvCtrl
+from page_selector_ctrl import PageSelectorCtrl
 
 
 class PagedOlvPanel(wx.Panel):
@@ -57,32 +57,10 @@ class PagedOlvPanel(wx.Panel):
         self.ctrlOlv.DeselectAll()
         event.Skip()
 
-    #------------------------------------------------------------------ Actions
-    #------------------------------------------------------------------ Methods
-
-
-class PagedOlvPanelController(ymvc.Controller):
-    def __init__(self, gui, ItemsModel, pageModel):
-        super(PagedOlvPanelController, self).__init__(gui)
-        self.gui.ctrlOlv.view.setController(OlvCtrlController,
-                                       ItemsModel)
-        self.gui.ctrlPage.view.setController(PageSelectorController,
-                                        pageModel)
-        self.ItemsModel = ItemsModel
-        self.pageModel = pageModel
-
 
 if __name__ == '__main__':
-    from y_mvc.models.data_model import ItemsModel
-    from y_mvc.models.page_model import PageModel
-
-    itemsModel = ItemsModel()
-    pageModel = PageModel()
-
     wxapp = wx.App(False)
     frame = wx.Frame(None)
-    pagedOlvCtrl = PagedOlvPanel(frame)
-    pagedOlvCtrl.view.setController(PagedOlvPanelController, itemsModel,
-                                    pageModel)
+    PagedOlvPanel(frame)
     frame.Show()
     wxapp.MainLoop()

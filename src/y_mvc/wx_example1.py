@@ -4,9 +4,9 @@ Created on 28 Mar 2013
 @author: Dave Wilson
 '''
 
-from wxAnyThread import anythread
 import wx
 import ymvc
+from wx_lib.wxdecorator import wxCallafter
 
 
 class MainFrame(wx.Frame):
@@ -46,7 +46,6 @@ class MainFrame(wx.Frame):
 
         self.btnOpen.Bind(wx.EVT_BUTTON, lambda _: self.view.notifyMsg('Open'))
 
-    @anythread
     def setAttr1(self, attr1):
         self.labelAttr1.SetLabel(attr1)
         self.SetTitle(attr1)
@@ -54,14 +53,12 @@ class MainFrame(wx.Frame):
         self.textAttr1.ChangeValue(attr1)
         self.textAttr1.SetInsertionPoint(insertionPoint)
 
-    @anythread
     def setAttr2(self, attr2):
         self.labelAttr2.SetLabel(attr2)
         insertionPoint = self.textAttr2.GetInsertionPoint()
         self.textAttr2.ChangeValue(attr2)
         self.textAttr2.SetInsertionPoint(insertionPoint)
 
-    @anythread
     def createFrame(self):
         frame = MainFrame(None)
         frame.Show()
@@ -93,10 +90,12 @@ class MainFrameMediator(ymvc.Mediator):
         frame = self.gui.createFrame()
         frame.view.setMediator(MainFrameMediator())
 
+    @wxCallafter
     @ymvc.onAttrSignal
     def onAttrModelAttr1(self, attr1):
         self.gui.setAttr1(attr1)
 
+    @wxCallafter
     @ymvc.onAttrSignal
     def onAttrModelAttr2(self, attr2):
         self.gui.setAttr2(attr2)
