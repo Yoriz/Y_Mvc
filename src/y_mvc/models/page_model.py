@@ -6,6 +6,10 @@ Created on 31 Mar 2013
 
 from y_mvc import ymvc
 from util.pagination import pagination
+from collections import namedtuple
+
+PageSlice = namedtuple('PageSlice', 'bottom top')
+OffsetLimit = namedtuple('OffsetLimit', 'offset limit')
 
 
 class PageModel(ymvc.Model):
@@ -19,10 +23,13 @@ class PageModel(ymvc.Model):
 
     def __init__(self, pageNo=1, lastPageNo=1, pageDetails='Page'):
         super(PageModel, self).__init__()
-        self.addObsAttrs('pageNo', 'lastPageNo', 'pageDetails')
         self.pageNo = pageNo
         self.lastPageNo = lastPageNo
         self.pageDetails = pageDetails
+        self.pageSlice = PageSlice(0, 0)
+        self.offsetLimit = OffsetLimit(0, 0)
+        self.addObsAttrs('pageNo', 'lastPageNo', 'pageDetails', 'pageSlice',
+                         'offsetLimit')
 
     @property
     def pageNo(self):
@@ -31,8 +38,8 @@ class PageModel(ymvc.Model):
     @pageNo.setter
     def pageNo(self, value):
         page = pagination(value, self.numRecords, self.perPage, self.orphans)
-        self.notifyKw(offset=page.offset, limit=page.limit)
-        self.notifyKw(bottom=page.bottom, top=page.top)
+        self.offsetLimit = OffsetLimit(page.offset, page.limit)
+        self.pageSlice = PageSlice(page.bottom, page.top)
         self.lastPageNo = page.numPages
         self._pageNo = page.pageNo
         self.pageDetails = page.details
