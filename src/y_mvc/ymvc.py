@@ -4,8 +4,8 @@ Created on 24 Mar 2013
 @author: Dave Wilson
 '''
 
-from functools import wraps
-from y_signal.ysignal import Ysignal
+import functools
+import y_signal.ysignal as ysignal
 import inspect
 import weakref
 
@@ -16,38 +16,38 @@ _SIGNAL_MSG = 'Msg'
 _SIGNAL_KW = 'Kw'
 _SIGNAL_MSGKW = 'MsgKw'
 
-_globalSignal = Ysignal(True)
-modelStore = {}
-weakModelStore = weakref.WeakValueDictionary()
+_global_signal = ysignal.Ysignal(True)
+model_store = {}
+weak_model_store = weakref.WeakValueDictionary()
 
 
-def messageSignal(message):
+def message_signal(message):
     '''Returns a tuple representing a message signal'''
     return (_SIGNAL_MSG, message)
 
 
-def keywordsSignal():
+def keywords_signal():
     '''Returns a tuple representing a keyword signal'''
     return (_SIGNAL_KW,)
 
 
-def messsageWithKeywordsSignal(message):
+def messsage_with_keywords_signal(message):
     '''Returns a tuple representing a message keyword signal'''
     return (_SIGNAL_MSGKW, message)
 
 
-def attributeSignal():
+def attribute_signal():
     '''Returns a tuple representing a attribute signal'''
     return (_SIGNAL_ATTR,)
 
 
-def onMsgSignal(message):
+def on_msg_signal(message):
     '''Decorates a method to only be called if the message matches the signal
     or if not called with a signal'''
     def decorator(target):
-        target._signal = messageSignal(message)
+        target._signal = message_signal(message)
 
-        @wraps(target)
+        @functools.wraps(target)
         def wrapper(self, *args, **kwargs):
             signal_call = kwargs.pop(_SIGNAL, None)
             if not signal_call or signal_call == target._signal:
@@ -56,51 +56,51 @@ def onMsgSignal(message):
     return decorator
 
 
-def onMsgKwSignal(message):
+def on_msg_kw_signal(message):
     '''Decorates a method to only be called if the message and keywords match
     the signal or if not called with a signal'''
     def decorator(target):
-        target._signal = messsageWithKeywordsSignal(message)
-        targetArgs = inspect.getargspec(target).args
-        targetArgs.remove('self')
-        targetArgs = set(targetArgs)
+        target._signal = messsage_with_keywords_signal(message)
+        target_args = inspect.getargspec(target).args
+        target_args.remove('self')
+        target_args = set(target_args)
 
-        @wraps(target)
+        @functools.wraps(target)
         def wrapper(self, *args, **kwargs):
             signal_call = kwargs.pop(_SIGNAL, None)
             if not signal_call or (signal_call == target._signal and
-                                   set(kwargs.keys()) == targetArgs):
+                                   set(kwargs.keys()) == target_args):
                 return target(self, *args, **kwargs)
         return wrapper
     return decorator
 
 
-def onKwSignal(target):
+def on_kw_signal(target):
     '''Decorates a method to only be called if the keywords match
     or if not called with a signal'''
-    target._signal = keywordsSignal()
-    targetArgs = inspect.getargspec(target).args
-    targetArgs.remove('self')
-    targetArgs = set(targetArgs)
+    target._signal = keywords_signal()
+    target_args = inspect.getargspec(target).args
+    target_args.remove('self')
+    target_args = set(target_args)
 
-    @wraps(target)
+    @functools.wraps(target)
     def wrapper(self, *args, **kwargs):
         signal_call = kwargs.pop(_SIGNAL, None)
         if not signal_call or (signal_call == target._signal and
-                               set(kwargs.keys()) == targetArgs):
+                               set(kwargs.keys()) == target_args):
             return target(self, *args, **kwargs)
     return wrapper
 
 
-def onAttrSignal(target):
+def on_attr_signal(target):
     '''Decorates a method to only be called if the keyword matches the
     attribute of the model that changed or if not called with a signal'''
-    target._signal = attributeSignal()
-    targetArgs = inspect.getargspec(target).args
-    targetArgs.remove('self')
-    target._attributes = targetArgs
+    target._signal = attribute_signal()
+    target_args = inspect.getargspec(target).args
+    target_args.remove('self')
+    target._attributes = target_args
 
-    @wraps(target)
+    @functools.wraps(target)
     def wrapper(self, *args, **kwargs):
         signal_call = kwargs.pop(_SIGNAL, None)
         if not signal_call or (signal_call == target._signal and
@@ -111,45 +111,41 @@ def onAttrSignal(target):
 
 class YmvcBase(object):
     '''YmvcBase object for signal communication in ymvc'''
-    def __init__(self, useThread=True):
+    def __init__(self, use_thread=True):
         '''Initialise attributes'''
-        self._ySignal = Ysignal(useThread)
+        self._ysignal = ysignal.Ysignal(use_thread)
 
     def bind(self, slot):
         '''bind a slot'''
-        self._ySignal.bind(slot)
+        self._ysignal.bind(slot)
 
     def unbind(self, slot):
         '''Remove slot from the list of listeners'''
-        self._ySignal.unbind(slot)
+        self._ysignal.unbind(slot)
 
-    def unbindAll(self):
+    def unbind_all(self):
         '''Remove all slots'''
-        self._ySignal.unbindAll()
+        self._ysignal.unbind_all()
 
-    def waitInQueue(self):
+    def wait_in_queue(self):
         '''wait in the signal queue till current signals are done'''
-        self._ySignal.waitInQueue()
+        self._ysignal.wait_in_queue()
 
-    def waitTillQueueEmpty(self):
-        '''Wait till the queue is empty (not reliable!)'''
-        self._ySignal.waitTillQueueEmpty()
-
-    def notifyMsg(self, message):
+    def notify_msg(self, message):
         '''Call methods decorated with onMessageSignal with matching message'''
-        kwargs = {_SIGNAL: messageSignal(message)}
-        return self._ySignal.emit(**kwargs)
+        kwargs = {_SIGNAL: message_signal(message)}
+        return self._ysignal.emit(**kwargs)
 
-    def notifyKw(self, **kwargs):
-        '''Call methods decorated with onKwSignal with matching keywords'''
-        kwargs[_SIGNAL] = keywordsSignal()
-        return self._ySignal.emit(**kwargs)
+    def notify_kw(self, **kwargs):
+        '''Call methods decorated with on_kw_signal with matching keywords'''
+        kwargs[_SIGNAL] = keywords_signal()
+        return self._ysignal.emit(**kwargs)
 
-    def notifyMsgKw(self, message, **kwargs):
-        '''Call methods decorated with onMsgKwSignal with matching message and
+    def notify_msg_kw(self, message, **kwargs):
+        '''Call methods decorated with on_msg_kw_signal with matching message and
         keywords'''
-        kwargs[_SIGNAL] = messsageWithKeywordsSignal(message)
-        return self._ySignal.emit(**kwargs)
+        kwargs[_SIGNAL] = messsage_with_keywords_signal(message)
+        return self._ysignal.emit(**kwargs)
 
 
 class View(YmvcBase):
@@ -159,12 +155,12 @@ class View(YmvcBase):
         self.gui = gui
         self.mediator = None
 
-    def setMediator(self, mediator):
+    def set_mediator(self, mediator):
         '''Set the Mediator to use with this view'''
         self.mediator = mediator
         mediator.gui = self.gui
-        mediator.view = weakref.proxy(self, mediator._onViewDestroyed)
-        mediator.onCreateBinds()
+        mediator.view = weakref.proxy(self, mediator._on_view_destroyed)
+        mediator.on_create_binds()
 
 
 class Model(YmvcBase):
@@ -173,66 +169,66 @@ class Model(YmvcBase):
     def __init__(self):
         '''Initialise'''
         super(Model, self).__init__()
-        self._signaledAttrs = set()
-        self.modelStore = modelStore
+        self._signaled_attrs = set()
+        self.model_store = model_store
 
-    def addObsAttrs(self, *attributes):
-        self._signaledAttrs.update(set(attributes))
+    def add_obs_attrs(self, *attributes):
+        self._signaled_attrs.update(set(attributes))
 
-    def removeObsAttrs(self, *attributes):
-        self._signaledAttrs.difference_update(set(attributes))
+    def remove_obs_attrs(self, *attributes):
+        self._signaled_attrs.difference_update(set(attributes))
 
-    def bind(self, slot, immediateCallback=True):
+    def bind(self, slot, immediate_callback=True):
         '''binds a slot if it is a signaledAttr emits its value'''
         super(Model, self).bind(slot)
-        if immediateCallback and slot._signal == attributeSignal():
-            self.slotGetAttr(slot)
+        if immediate_callback and slot._signal == attribute_signal():
+            self.slot_get_attr(slot)
 
     def __setattr__(self, name, value):
-        '''Add a _setattrCall to the queue if listed in signaledAttrs'''
+        '''Add a _setattr_call to the queue if listed in signaledAttrs'''
         if not hasattr(self, name):
             return YmvcBase.__setattr__(self, name, value)
 
-        if name in self._signaledAttrs:
-            if self._ySignal.useThread:
-                self._ySignal.queuedThread.submit(self._setattrCall, name,
+        if name in self._signaled_attrs:
+            if self._ysignal.use_thread:
+                self._ysignal.queued_thread.submit(self._setattr_call, name,
                                                   value)
 
             else:
-                self._setattrCall(name, value)
+                self._setattr_call(name, value)
         else:
             return YmvcBase.__setattr__(self, name, value)
 
-    def _setattrCall(self, name, value):
+    def _setattr_call(self, name, value):
         '''Sets an attributes value and then sends a signal of its new value'''
         YmvcBase.__setattr__(self, name, value)
-        kwargs = {_SIGNAL: attributeSignal(), name: getattr(self, name)}
-        self._ySignal._emitCall(**kwargs)
+        kwargs = {_SIGNAL: attribute_signal(), name: getattr(self, name)}
+        self._ysignal._emit_call(**kwargs)
 
-    def slotGetAttr(self, slot):
+    def slot_get_attr(self, slot):
         '''Emit the attribute for this slot only'''
         name = slot._attributes[0]
-        kwargs = {_SIGNAL: attributeSignal(), name: getattr(self, name)}
-        return self._ySignal.emitSlot(slot, **kwargs)
+        kwargs = {_SIGNAL: attribute_signal(), name: getattr(self, name)}
+        return self._ysignal.emit_slot(slot, **kwargs)
 
 
 class Mediator(YmvcBase):
     '''Mediates between a view and models and can send/receive signals to/from
     other mediator's'''
-    def __init__(self, uniqueName=''):
+    def __init__(self, unique_name=''):
         '''Initialise attributes'''
-        self._ySignal = _globalSignal
-        self.uniqueName = uniqueName
+        self._ysignal = _global_signal
+        self.unique_name = unique_name
         self.gui = None
         self.view = None
-        self.modelStore = modelStore
+        self.model_store = model_store
 
-    def onCreateBinds(self):
+    def on_create_binds(self):
         '''Overwrite this method with required binds, will be called when set
         to a view'''
 
-    def _onViewDestroyed(self, *args, **kwargs):
-        self.onViewDestroyed()
+    def _on_view_destroyed(self, *args, **kwargs):
+        self.on_view_destroyed()
 
-    def onViewDestroyed(self):
+    def on_view_destroyed(self):
         '''Overwrite if an action is required when the view is destroyed'''

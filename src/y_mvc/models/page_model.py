@@ -28,7 +28,7 @@ class PageModel(ymvc.Model):
         self.pageDetails = pageDetails
         self.pageSlice = PageSlice(0, 0)
         self.offsetLimit = OffsetLimit(0, 0)
-        self.addObsAttrs('pageNo', 'lastPageNo', 'pageDetails', 'pageSlice',
+        self.add_obs_attrs('pageNo', 'lastPageNo', 'pageDetails', 'pageSlice',
                          'offsetLimit')
 
     @property

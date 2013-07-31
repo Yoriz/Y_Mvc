@@ -20,21 +20,21 @@ class TestBase(unittest.TestCase):
     def tearDown(self):
         unittest.TestCase.tearDown(self)
 
-    @ymvc.onKwSignal
+    @ymvc.on_kw_signal
     def onTestOnSignalKw(self, attr1):
         self.attr1 = attr1
 
-    @ymvc.onKwSignal
+    @ymvc.on_kw_signal
     def onTestOnSignalManyKw(self, attr2, attr1, attr3):
         self.attr1 = attr1
         self.attr2 = attr2
         self.attr3 = attr3
 
-    @ymvc.onMsgSignal('Empty')
+    @ymvc.on_msg_signal('Empty')
     def onTestOnSignalNotifyMsg(self):
         self.notifyCalled = True
 
-    @ymvc.onMsgKwSignal('CallMe')
+    @ymvc.on_msg_kw_signal('CallMe')
     def onTestOnSignalNotifyMsgKw(self, attr1, attr2):
         self.attr1 = attr1
         self.attr2 = attr2
@@ -42,28 +42,28 @@ class TestBase(unittest.TestCase):
 
     def testNotifyKw(self):
         self.ymvcBase.bind(self.onTestOnSignalKw)
-        self.ymvcBase.notifyKw(attr1='TestValue')
-        self.ymvcBase.waitInQueue()
+        self.ymvcBase.notify_kw(attr1='TestValue')
+        self.ymvcBase.wait_in_queue()
         self.assertEqual('TestValue', self.attr1)
 
     def testNotifyManyKw(self):
         self.ymvcBase.bind(self.onTestOnSignalManyKw)
-        self.ymvcBase.notifyKw(attr1='attr1', attr2='attr2', attr3='attr3')
-        self.ymvcBase.waitInQueue()
+        self.ymvcBase.notify_kw(attr1='attr1', attr2='attr2', attr3='attr3')
+        self.ymvcBase.wait_in_queue()
         self.assertEqual('attr1', self.attr1)
         self.assertEqual('attr2', self.attr2)
         self.assertEqual('attr3', self.attr3)
 
     def testNotify(self):
         self.ymvcBase.bind(self.onTestOnSignalNotifyMsg)
-        self.ymvcBase.notifyMsg('Empty')
-        self.ymvcBase.waitInQueue()
+        self.ymvcBase.notify_msg('Empty')
+        self.ymvcBase.wait_in_queue()
         self.assertEqual(True, self.notifyCalled)
 
     def testNotifyMsgKw(self):
         self.ymvcBase.bind(self.onTestOnSignalNotifyMsgKw)
-        self.ymvcBase.notifyMsgKw('CallMe', attr1='attr1', attr2='attr2')
-        self.ymvcBase.waitInQueue()
+        self.ymvcBase.notify_msg_kw('CallMe', attr1='attr1', attr2='attr2')
+        self.ymvcBase.wait_in_queue()
         self.assertEqual('attr1', self.attr1)
         self.assertEqual('attr2', self.attr2)
         self.assertEqual('CallMe', self.attr3)
@@ -73,7 +73,7 @@ class TestModel1(ymvc.Model):
 
     def __init__(self, attr1='StartValue', attr2='StartValue'):
         super(TestModel1, self).__init__()
-        self.addObsAttrs('attr1', 'attr2')
+        self.add_obs_attrs('attr1', 'attr2')
         self.attr1 = attr1
         self.attr2 = attr2
         self.attr3 = 'Attr3'
@@ -86,33 +86,33 @@ class TestModel(unittest.TestCase):
         self.attr1 = None
         self.attr2 = None
 
-    @ymvc.onAttrSignal
+    @ymvc.on_attr_signal
     def attr1Callback(self, attr1):
         self.attr1 = attr1
 
-    @ymvc.onAttrSignal
+    @ymvc.on_attr_signal
     def attr2Callback(self, attr2):
         self.attr2 = attr2
 
     def testSetAttr(self):
         self.model.attr1 = 'Testing'
-        self.model.waitInQueue()
+        self.model.wait_in_queue()
         self.assertEqual('Testing', self.model.attr1)
 
     def testSlotGetAttr(self):
-        self.model.slotGetAttr(self.attr1Callback)
-        self.model.waitInQueue()
+        self.model.slot_get_attr(self.attr1Callback)
+        self.model.wait_in_queue()
         self.assertEqual(self.model.attr1, self.attr1)
 
     def testSlotAttrCallbackOnBind(self):
         self.model.bind(self.attr1Callback)
-        self.model.waitInQueue()
+        self.model.wait_in_queue()
         self.assertEqual('StartValue', self.attr1)
 
     def testSetAttrCallback(self):
         self.model.bind(self.attr1Callback)
         self.model.attr1 = 'Testing'
-        self.model.waitInQueue()
+        self.model.wait_in_queue()
         self.assertEqual('Testing', self.attr1)
 
     def testNonBindAttr(self):
@@ -121,7 +121,7 @@ class TestModel(unittest.TestCase):
         self.assertEqual('Altered', self.model.attr3)
 
     def testHasModelStore(self):
-        self.assertIs(ymvc.modelStore, self.model.modelStore)
+        self.assertIs(ymvc.model_store, self.model.model_store)
 
 
 class TestViewAndMediator(unittest.TestCase):
@@ -136,19 +136,19 @@ class TestViewAndMediator(unittest.TestCase):
 
         self.gui = Gui()
 
-    def onViewDestroyed(self):
+    def on_view_destroyed(self):
         self.viewDestroyed = True
 
-    def onCreateBinds(self):
+    def on_create_binds(self):
         self.createBinds = True
 
     def testViewSetMediator(self):
         mediator = ymvc.Mediator('Mediator1')
-        mediator.onViewDestroyed = self.onViewDestroyed
-        mediator.onCreateBinds = self.onCreateBinds
-        self.gui.view.setMediator(mediator)
+        mediator.on_view_destroyed = self.on_view_destroyed
+        mediator.on_create_binds = self.on_create_binds
+        self.gui.view.set_mediator(mediator)
         self.assertIs(self.gui, mediator.gui)
-        self.assertIs(ymvc.modelStore, mediator.modelStore)
+        self.assertIs(ymvc.model_store, mediator.model_store)
         self.assertIs(self.gui.view.__class__, mediator.view.__class__)
         del self.gui.view
         self.assertEqual(True, self.viewDestroyed)

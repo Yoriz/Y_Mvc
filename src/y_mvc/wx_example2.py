@@ -33,7 +33,7 @@ class MainFrame(wx.Frame):
         self.Fit()
         self.Layout()
 
-        self.btn.Bind(wx.EVT_BUTTON, lambda x: self.view.notifyMsg('Start'))
+        self.btn.Bind(wx.EVT_BUTTON, lambda x: self.view.notify_msg('Start'))
 
     def setLabel(self, value):
         self.label1.SetLabel(str(value))
@@ -44,28 +44,28 @@ class MainFrame(wx.Frame):
 
 class MainFrameMediator(ymvc.Mediator):
 
-    def __init__(self, uniqueName):
-        super(MainFrameMediator, self).__init__(uniqueName)
+    def __init__(self, unique_name):
+        super(MainFrameMediator, self).__init__(unique_name)
 
-    def onCreateBinds(self):
+    def on_create_binds(self):
 
-        self.delayedModel = self.modelStore['delayedModel']
+        self.delayedModel = self.model_store['delayedModel']
 
         self.view.bind(self.onViewStart)
         self.delayedModel.bind(self.onDelayedModelBusy)
         self.delayedModel.bind(self.onDelayedModelValue)
 
-    @ymvc.onMsgSignal('Start')
+    @ymvc.on_msg_signal('Start')
     def onViewStart(self):
-        self.delayedModel.notifyMsg('StartCount')
+        self.delayedModel.notify_msg('StartCount')
 
     @wxCallafter
-    @ymvc.onKwSignal
+    @ymvc.on_kw_signal
     def onDelayedModelBusy(self, busy):
         self.gui.setButtonState(not busy)
 
     @wxCallafter
-    @ymvc.onAttrSignal
+    @ymvc.on_attr_signal
     def onDelayedModelValue(self, value):
         self.gui.setLabel(value)
 
@@ -73,26 +73,26 @@ class MainFrameMediator(ymvc.Mediator):
 class DelayedModel(ymvc.Model):
     def __init__(self):
         super(DelayedModel, self).__init__()
-        self.addObsAttrs('value')
+        self.add_obs_attrs('value')
         self.bind(self.startCount)
         self.value = 0
 
     @runAsync
-    @ymvc.onMsgSignal('StartCount')
+    @ymvc.on_msg_signal('StartCount')
     def startCount(self):
-        self.notifyKw(busy=True)
+        self.notify_kw(busy=True)
         for number in xrange(1, 11):
             time.sleep(1)
             self.value = number
             print self.value
         self.value = 0
-        self.notifyKw(busy=False)
+        self.notify_kw(busy=False)
 
 
 if __name__ == '__main__':
-    ymvc.modelStore['delayedModel'] = DelayedModel()
+    ymvc.model_store['delayedModel'] = DelayedModel()
     wxapp = wx.App(False)
     mainFrame = MainFrame(None)
-    mainFrame.view.setMediator(MainFrameMediator('MainFrameMediator'))
+    mainFrame.view.set_mediator(MainFrameMediator('MainFrameMediator'))
     mainFrame.Show()
     wxapp.MainLoop()

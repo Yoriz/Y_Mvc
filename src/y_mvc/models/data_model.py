@@ -19,7 +19,7 @@ class BaseDataModel(ymvc.Model):
 
     def __init__(self, status='', error=''):
         super(BaseDataModel, self).__init__()
-        self.addObsAttrs('status', 'error')
+        self.add_obs_attrs('status', 'error')
         self.status = status
         self.error = error
 
@@ -35,7 +35,7 @@ class BaseDataModel(ymvc.Model):
 class ItemsModel(BaseDataModel):
     def __init__(self, items=None, selectedId=None, sortDetails=None):
         super(ItemsModel, self).__init__()
-        self.addObsAttrs('items', 'selectedId', 'sortDetails')
+        self.add_obs_attrs('items', 'selectedId', 'sortDetails')
         self.items = items or []
         self.selectedId = selectedId
         self.sortDetails = sortDetails or (('', True),)
@@ -51,7 +51,7 @@ class ItemsModel(BaseDataModel):
 class PagedItemsModel(ItemsModel):
     def __init__(self, items=None, selectedId=None, sortDetails=None):
         super(PagedItemsModel, self).__init__(items, selectedId, sortDetails)
-        self.addObsAttrs('pagination')
+        self.add_obs_attrs('pagination')
         self.pagination = None
         self.setPagination(1)
 

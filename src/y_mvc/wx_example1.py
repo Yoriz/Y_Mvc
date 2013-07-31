@@ -39,12 +39,12 @@ class MainFrame(wx.Frame):
         self.Layout()
 
         self.textAttr1.Bind(wx.EVT_TEXT,
-            lambda event: self.view.notifyKw(attr1=event.String))
+            lambda event: self.view.notify_kw(attr1=event.String))
 
         self.textAttr2.Bind(wx.EVT_TEXT,
-            lambda event: self.view.notifyKw(attr2=event.String))
+            lambda event: self.view.notify_kw(attr2=event.String))
 
-        self.btnOpen.Bind(wx.EVT_BUTTON, lambda _: self.view.notifyMsg('Open'))
+        self.btnOpen.Bind(wx.EVT_BUTTON, lambda _: self.view.notify_msg('Open'))
 
     def setAttr1(self, attr1):
         self.labelAttr1.SetLabel(attr1)
@@ -69,38 +69,38 @@ class MainFrameMediator(ymvc.Mediator):
     def __init__(self):
         super(MainFrameMediator, self).__init__('MainFrame')
 
-    def onCreateBinds(self):
-        self.attrModel = self.modelStore['attrModel']
+    def on_create_binds(self):
+        self.attrModel = self.model_store['attrModel']
         self.view.bind(self.onViewAttr1)
         self.view.bind(self.onViewAttr2)
         self.view.bind(self.onOpen)
         self.attrModel.bind(self.onAttrModelAttr1)
         self.attrModel.bind(self.onAttrModelAttr2)
 
-    @ymvc.onKwSignal
+    @ymvc.on_kw_signal
     def onViewAttr1(self, attr1):
         self.attrModel.attr1 = attr1
 
-    @ymvc.onKwSignal
+    @ymvc.on_kw_signal
     def onViewAttr2(self, attr2):
         self.attrModel.attr2 = attr2
 
-    @ymvc.onMsgSignal('Open')
+    @ymvc.on_msg_signal('Open')
     def onOpen(self):
         frame = self.gui.createFrame()
-        frame.view.setMediator(MainFrameMediator())
+        frame.view.set_mediator(MainFrameMediator())
 
     @wxCallafter
-    @ymvc.onAttrSignal
+    @ymvc.on_attr_signal
     def onAttrModelAttr1(self, attr1):
         self.gui.setAttr1(attr1)
 
     @wxCallafter
-    @ymvc.onAttrSignal
+    @ymvc.on_attr_signal
     def onAttrModelAttr2(self, attr2):
         self.gui.setAttr2(attr2)
 
-    def onViewDestroyed(self):
+    def on_view_destroyed(self):
         print 'ViewDestroyed'
 
 
@@ -108,16 +108,16 @@ class AttrModel(ymvc.Model):
 
     def __init__(self, attr1='', attr2=''):
         super(AttrModel, self).__init__()
-        self.addObsAttrs('attr1', 'attr2')
+        self.add_obs_attrs('attr1', 'attr2')
         self.attr1 = attr1
         self.attr2 = attr2
 
 
 if __name__ == '__main__':
 
-    ymvc.modelStore['attrModel'] = AttrModel('Attr1', 'Attr2')
+    ymvc.model_store['attrModel'] = AttrModel('Attr1', 'Attr2')
     wxapp = wx.App(False)
     mainFrame = MainFrame(None)
-    mainFrame.view.setMediator(MainFrameMediator())
+    mainFrame.view.set_mediator(MainFrameMediator())
     mainFrame.Show()
     wxapp.MainLoop()

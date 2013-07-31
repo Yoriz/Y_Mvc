@@ -24,25 +24,25 @@ def runAsync(func):
 class Threader(ymvc.Model):
     def __init__(self):
         super(Threader, self).__init__()
-        self.addObsAttrs('value', 'counting')
+        self.add_obs_attrs('value', 'counting')
         self.bind(self.start)
         self.bind(self.stop)
         self.value = 0
         self.counting = False
 
     @runAsync
-    @ymvc.onMsgSignal('start')
+    @ymvc.on_msg_signal('start')
     def start(self):
         self.counting = True
-        self.waitInQueue()
+        self.wait_in_queue()
         while self.counting:
             print 'Counting'
             time.sleep(1)
             self.value += 1
-            self.waitInQueue()
+            self.wait_in_queue()
 
     @runAsync
-    @ymvc.onMsgSignal('stop')
+    @ymvc.on_msg_signal('stop')
     def stop(self):
         self.counting = False
 
@@ -53,18 +53,18 @@ class CountMediator(ymvc.Mediator):
         self.threader = Threader()
         self.threader.bind(self.onThreaderValue)
         self.threader.bind(self.onThreaderCounting)
-        self.threader.notifyMsg('start')
+        self.threader.notify_msg('start')
         while True:
             print 'running main loop'
             time.sleep(1)
 
-    @ymvc.onAttrSignal
+    @ymvc.on_attr_signal
     def onThreaderValue(self, value):
         print 'Threader count: {}'.format(value)
         if value == 5:
-            self.threader.notifyMsg('stop')
+            self.threader.notify_msg('stop')
 
-    @ymvc.onAttrSignal
+    @ymvc.on_attr_signal
     def onThreaderCounting(self, counting):
         if counting:
             print 'Threader started counting'
