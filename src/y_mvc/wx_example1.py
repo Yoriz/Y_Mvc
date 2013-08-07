@@ -6,7 +6,7 @@ Created on 28 Mar 2013
 
 import wx
 import ymvc
-from wx_lib.wxdecorator import wxCallafter
+from wx_lib.wxdecorator import wx_callafter
 
 
 class MainFrame(wx.Frame):
@@ -90,12 +90,12 @@ class MainFrameMediator(ymvc.Mediator):
         frame = self.gui.createFrame()
         frame.view.set_mediator(MainFrameMediator())
 
-    @wxCallafter
+    @wx_callafter
     @ymvc.on_attr_signal
     def onAttrModelAttr1(self, attr1):
         self.gui.setAttr1(attr1)
 
-    @wxCallafter
+    @wx_callafter
     @ymvc.on_attr_signal
     def onAttrModelAttr2(self, attr2):
         self.gui.setAttr2(attr2)

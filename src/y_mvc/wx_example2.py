@@ -5,8 +5,8 @@ Created on 29 Mar 2013
 '''
 
 import wx
-from wx_lib.wxdecorator import wxCallafter
-from util.decorator import runAsync
+from wx_lib.wxdecorator import wx_callafter
+from util.decorator import run_async
 import time
 import ymvc
 
@@ -59,12 +59,12 @@ class MainFrameMediator(ymvc.Mediator):
     def onViewStart(self):
         self.delayedModel.notify_msg('StartCount')
 
-    @wxCallafter
+    @wx_callafter
     @ymvc.on_kw_signal
     def onDelayedModelBusy(self, busy):
         self.gui.setButtonState(not busy)
 
-    @wxCallafter
+    @wx_callafter
     @ymvc.on_attr_signal
     def onDelayedModelValue(self, value):
         self.gui.setLabel(value)
@@ -77,7 +77,7 @@ class DelayedModel(ymvc.Model):
         self.bind(self.startCount)
         self.value = 0
 
-    @runAsync
+    @run_async
     @ymvc.on_msg_signal('StartCount')
     def startCount(self):
         self.notify_kw(busy=True)

@@ -11,7 +11,7 @@ import time
 import ymvc
 
 
-def runAsync(func):
+def run_async(func):
     '''Decorates a method to run in a separate thread'''
     @functools.wraps(func)
     def wrapper(*args, **kwargs):
@@ -30,7 +30,7 @@ class Threader(ymvc.Model):
         self.value = 0
         self.counting = False
 
-    @runAsync
+    @run_async
     @ymvc.on_msg_signal('start')
     def start(self):
         self.counting = True
@@ -41,7 +41,7 @@ class Threader(ymvc.Model):
             self.value += 1
             self.wait_in_queue()
 
-    @runAsync
+    @run_async
     @ymvc.on_msg_signal('stop')
     def stop(self):
         self.counting = False
