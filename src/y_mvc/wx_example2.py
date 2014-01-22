@@ -5,8 +5,6 @@ Created on 29 Mar 2013
 '''
 
 import wx
-from wx_lib.wxdecorator import wx_callafter
-from util.decorator import run_async
 import time
 import ymvc
 
@@ -49,7 +47,7 @@ class MainFrameMediator(ymvc.Mediator):
 
     def on_create_binds(self):
 
-        self.delayedModel = self.model_store['delayedModel']
+        self.delayedModel = self.proxy_store['delayedModel']
 
         self.view.bind(self.onViewStart)
         self.delayedModel.bind(self.onDelayedModelBusy)
@@ -57,27 +55,26 @@ class MainFrameMediator(ymvc.Mediator):
 
     @ymvc.on_msg_signal('Start')
     def onViewStart(self):
-        self.delayedModel.notify_msg('StartCount')
+        self.delayedModel.call.notify_msg('StartCount')
 
-    @wx_callafter
+    @ymvc.wx_callafter
     @ymvc.on_kw_signal
     def onDelayedModelBusy(self, busy):
         self.gui.setButtonState(not busy)
 
-    @wx_callafter
+    @ymvc.wx_callafter
     @ymvc.on_attr_signal
     def onDelayedModelValue(self, value):
         self.gui.setLabel(value)
 
 
-class DelayedModel(ymvc.Model):
+class DelayedModel(ymvc.Proxy):
     def __init__(self):
         super(DelayedModel, self).__init__()
         self.add_obs_attrs('value')
-        self.bind(self.startCount)
+        self.call.bind(self.startCount)
         self.value = 0
 
-    @run_async
     @ymvc.on_msg_signal('StartCount')
     def startCount(self):
         self.notify_kw(busy=True)
@@ -90,7 +87,7 @@ class DelayedModel(ymvc.Model):
 
 
 if __name__ == '__main__':
-    ymvc.model_store['delayedModel'] = DelayedModel()
+    ymvc.proxy_store['delayedModel'] = DelayedModel()
     wxapp = wx.App(False)
     mainFrame = MainFrame(None)
     mainFrame.view.set_mediator(MainFrameMediator('MainFrameMediator'))

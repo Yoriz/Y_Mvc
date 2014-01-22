@@ -15,7 +15,7 @@ STATUS_CHECKING_DATA = 'Checking Data'
 STATUS_ERROR = 'Data Error'
 
 
-class BaseDataModel(ymvc.Model):
+class BaseDataModel(ymvc.Proxy):
 
     def __init__(self, status='', error=''):
         super(BaseDataModel, self).__init__()

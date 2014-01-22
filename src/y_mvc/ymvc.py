@@ -5,9 +5,17 @@ Created on 24 Mar 2013
 '''
 
 import functools
-import y_signal.ysignal as ysignal
 import inspect
 import weakref
+
+
+from y_signal import ysignal
+
+
+try:
+    import wx
+except ImportError:
+    pass
 
 
 _SIGNAL = 'uniqueSignalKeyName'
@@ -16,9 +24,13 @@ _SIGNAL_MSG = 'Msg'
 _SIGNAL_KW = 'Kw'
 _SIGNAL_MSGKW = 'MsgKw'
 
-_global_signal = ysignal.Ysignal(True)
-model_store = {}
-weak_model_store = weakref.WeakValueDictionary()
+_mediator_queued_thread = ysignal.QueuedThread()
+_proxy_queued_thread_in = ysignal.QueuedThread()
+_proxy_queued_thread_out = ysignal.QueuedThread()
+
+_global_signal = ysignal.Ysignal(_mediator_queued_thread)
+proxy_store = {}
+weak_proxy_store = weakref.WeakValueDictionary()
 
 
 def message_signal(message):
@@ -39,6 +51,16 @@ def messsage_with_keywords_signal(message):
 def attribute_signal():
     '''Returns a tuple representing a attribute signal'''
     return (_SIGNAL_ATTR,)
+
+
+def wx_callafter(target):
+    '''Decorates a mediator method to make thread safe wx method calls'''
+    @functools.wraps(target)
+    def wrapper(*args, **kwargs):
+        if not args[0].gui:
+            return
+        wx.CallAfter(target, *args, **kwargs)
+    return wrapper
 
 
 def on_msg_signal(message):
@@ -111,9 +133,9 @@ def on_attr_signal(target):
 
 class YmvcBase(object):
     '''YmvcBase object for signal communication in ymvc'''
-    def __init__(self, use_thread=True):
+    def __init__(self, queued_thread=None):
         '''Initialise attributes'''
-        self._ysignal = ysignal.Ysignal(use_thread)
+        self._ysignal = ysignal.Ysignal(queued_thread)
 
     def bind(self, slot):
         '''bind a slot'''
@@ -132,7 +154,7 @@ class YmvcBase(object):
         self._ysignal.wait_in_queue()
 
     def notify_msg(self, message):
-        '''Call methods decorated with onMessageSignal with matching message'''
+        '''Call methods decorated with on_msg_signal with matching message'''
         kwargs = {_SIGNAL: message_signal(message)}
         return self._ysignal.emit(**kwargs)
 
@@ -142,8 +164,8 @@ class YmvcBase(object):
         return self._ysignal.emit(**kwargs)
 
     def notify_msg_kw(self, message, **kwargs):
-        '''Call methods decorated with on_msg_kw_signal with matching message and
-        keywords'''
+        '''Call methods decorated with on_msg_kw_signal with matching message
+        and keywords'''
         kwargs[_SIGNAL] = messsage_with_keywords_signal(message)
         return self._ysignal.emit(**kwargs)
 
@@ -151,7 +173,7 @@ class YmvcBase(object):
 class View(YmvcBase):
     '''Communicates from your view to a Mediator'''
     def __init__(self, gui):
-        super(View, self).__init__(False)
+        super(View, self).__init__(None)
         self.gui = gui
         self.mediator = None
 
@@ -163,24 +185,32 @@ class View(YmvcBase):
         mediator.on_create_binds()
 
 
-class Model(YmvcBase):
+class Proxy(YmvcBase):
     '''Contains the data of your application'''
 
     def __init__(self):
         '''Initialise'''
-        super(Model, self).__init__()
+        super(Proxy, self).__init__(_proxy_queued_thread_out)
+        self.call = YmvcBase(_proxy_queued_thread_in)
         self._signaled_attrs = set()
-        self.model_store = model_store
+        self.proxy_store = proxy_store
 
     def add_obs_attrs(self, *attributes):
+        self._ysignal.queued_thread.submit(self.add_obs_attrs_call, attributes)
+
+    def add_obs_attrs_call(self, attributes):
         self._signaled_attrs.update(set(attributes))
 
     def remove_obs_attrs(self, *attributes):
+        self._ysignal.queued_thread.submit(self.remove_obs_attrs_call,
+            attributes)
+
+    def remove_obs_attrs_call(self, attributes):
         self._signaled_attrs.difference_update(set(attributes))
 
     def bind(self, slot, immediate_callback=True):
         '''binds a slot if it is a signaledAttr emits its value'''
-        super(Model, self).bind(slot)
+        super(Proxy, self).bind(slot)
         if immediate_callback and slot._signal == attribute_signal():
             self.slot_get_attr(slot)
 
@@ -190,7 +220,7 @@ class Model(YmvcBase):
             return YmvcBase.__setattr__(self, name, value)
 
         if name in self._signaled_attrs:
-            if self._ysignal.use_thread:
+            if self._ysignal.queued_thread:
                 self._ysignal.queued_thread.submit(self._setattr_call, name,
                                                   value)
 
@@ -202,8 +232,17 @@ class Model(YmvcBase):
     def _setattr_call(self, name, value):
         '''Sets an attributes value and then sends a signal of its new value'''
         YmvcBase.__setattr__(self, name, value)
+        self._notify_attr_call(name)
+
+    def _notify_attr_call(self, name):
+        '''Call methods decorated with on_attr_signal with matching
+        attribute'''
         kwargs = {_SIGNAL: attribute_signal(), name: getattr(self, name)}
         self._ysignal._emit_call(**kwargs)
+
+    def notify_attr(self, name):
+        '''Notify of an attribute change manually'''
+        self._ysignal.queued_thread.submit(self._notify_attr_call, name)
 
     def slot_get_attr(self, slot):
         '''Emit the attribute for this slot only'''
@@ -221,7 +260,7 @@ class Mediator(YmvcBase):
         self.unique_name = unique_name
         self.gui = None
         self.view = None
-        self.model_store = model_store
+        self.proxy_store = proxy_store
 
     def on_create_binds(self):
         '''Overwrite this method with required binds, will be called when set

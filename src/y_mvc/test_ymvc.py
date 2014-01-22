@@ -11,7 +11,7 @@ import unittest
 class TestBase(unittest.TestCase):
 
     def setUp(self):
-        self.ymvcBase = ymvc.YmvcBase()
+        self.ymvcBase = ymvc.YmvcBase(ymvc._proxy_queued_thread_out)
         self.notifyCalled = False
         self.attr1 = None
         self.attr2 = None
@@ -69,20 +69,20 @@ class TestBase(unittest.TestCase):
         self.assertEqual('CallMe', self.attr3)
 
 
-class TestModel1(ymvc.Model):
+class TesProxy1(ymvc.Proxy):
 
     def __init__(self, attr1='StartValue', attr2='StartValue'):
-        super(TestModel1, self).__init__()
+        super(TesProxy1, self).__init__()
         self.add_obs_attrs('attr1', 'attr2')
         self.attr1 = attr1
         self.attr2 = attr2
         self.attr3 = 'Attr3'
 
 
-class TestModel(unittest.TestCase):
+class TestProxy(unittest.TestCase):
 
     def setUp(self):
-        self.model = TestModel1()
+        self.proxy = TesProxy1()
         self.attr1 = None
         self.attr2 = None
 
@@ -95,33 +95,33 @@ class TestModel(unittest.TestCase):
         self.attr2 = attr2
 
     def testSetAttr(self):
-        self.model.attr1 = 'Testing'
-        self.model.wait_in_queue()
-        self.assertEqual('Testing', self.model.attr1)
+        self.proxy.attr1 = 'Testing'
+        self.proxy.wait_in_queue()
+        self.assertEqual('Testing', self.proxy.attr1)
 
     def testSlotGetAttr(self):
-        self.model.slot_get_attr(self.attr1Callback)
-        self.model.wait_in_queue()
-        self.assertEqual(self.model.attr1, self.attr1)
+        self.proxy.slot_get_attr(self.attr1Callback)
+        self.proxy.wait_in_queue()
+        self.assertEqual(self.proxy.attr1, self.attr1)
 
     def testSlotAttrCallbackOnBind(self):
-        self.model.bind(self.attr1Callback)
-        self.model.wait_in_queue()
+        self.proxy.bind(self.attr1Callback)
+        self.proxy.wait_in_queue()
         self.assertEqual('StartValue', self.attr1)
 
     def testSetAttrCallback(self):
-        self.model.bind(self.attr1Callback)
-        self.model.attr1 = 'Testing'
-        self.model.wait_in_queue()
+        self.proxy.bind(self.attr1Callback)
+        self.proxy.attr1 = 'Testing'
+        self.proxy.wait_in_queue()
         self.assertEqual('Testing', self.attr1)
 
     def testNonBindAttr(self):
-        self.assertEqual('Attr3', self.model.attr3)
-        self.model.attr3 = 'Altered'
-        self.assertEqual('Altered', self.model.attr3)
+        self.assertEqual('Attr3', self.proxy.attr3)
+        self.proxy.attr3 = 'Altered'
+        self.assertEqual('Altered', self.proxy.attr3)
 
-    def testHasModelStore(self):
-        self.assertIs(ymvc.model_store, self.model.model_store)
+    def testHasProxyStore(self):
+        self.assertIs(ymvc.proxy_store, self.proxy.proxy_store)
 
 
 class TestViewAndMediator(unittest.TestCase):
@@ -148,7 +148,7 @@ class TestViewAndMediator(unittest.TestCase):
         mediator.on_create_binds = self.on_create_binds
         self.gui.view.set_mediator(mediator)
         self.assertIs(self.gui, mediator.gui)
-        self.assertIs(ymvc.model_store, mediator.model_store)
+        self.assertIs(ymvc.proxy_store, mediator.proxy_store)
         self.assertIs(self.gui.view.__class__, mediator.view.__class__)
         del self.gui.view
         self.assertEqual(True, self.viewDestroyed)

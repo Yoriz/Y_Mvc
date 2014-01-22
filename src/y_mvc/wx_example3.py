@@ -7,7 +7,6 @@ Created on 8 Apr 2013
 
 import wx
 import ymvc
-from wx_lib.wxdecorator import wx_callafter
 
 MAIN_FRAME = 'MainFrame'
 CHILD_FRAME1 = 'ChildFrame1'
@@ -130,34 +129,34 @@ class MainFrameMediator(ymvc.Mediator):
         self.gui.btnEnable(3, False)
         frame.view.set_mediator(ChildFrameMediator(MAIN_FRAME + CHILD_FRAME3))
 
-    @wx_callafter
+    @ymvc.wx_callafter
     @ymvc.on_msg_kw_signal(MAIN_FRAME + CHILD_FRAME1)
     def onChild1Text(self, text):
         self.gui.setStcTxtB(1, text)
 
-    @wx_callafter
+    @ymvc.wx_callafter
     @ymvc.on_msg_signal(MAIN_FRAME + CHILD_FRAME1 + 'Destroyed')
     def onChild1Destroyed(self):
         if self.gui:
             self.gui.btnEnable(1, True)
 
-    @wx_callafter
+    @ymvc.wx_callafter
     @ymvc.on_msg_kw_signal(MAIN_FRAME + CHILD_FRAME2)
     def onChild2Text(self, text):
         self.gui.setStcTxtB(2, text)
 
-    @wx_callafter
+    @ymvc.wx_callafter
     @ymvc.on_msg_signal(MAIN_FRAME + CHILD_FRAME2 + 'Destroyed')
     def onChild2Destroyed(self):
         if self.gui:
             self.gui.btnEnable(2, True)
 
-    @wx_callafter
+    @ymvc.wx_callafter
     @ymvc.on_msg_kw_signal(MAIN_FRAME + CHILD_FRAME3)
     def onChild3Text(self, text):
         self.gui.setStcTxtB(3, text)
 
-    @wx_callafter
+    @ymvc.wx_callafter
     @ymvc.on_msg_signal(MAIN_FRAME + CHILD_FRAME3 + 'Destroyed')
     def onChild3Destroyed(self):
         if self.gui:
@@ -262,42 +261,42 @@ class ChildFrameMediator(ymvc.Mediator):
     def onText3(self, text3):
         self.notify_msg_kw(self.unique_name, text3=text3)
 
-    @wx_callafter
+    @ymvc.wx_callafter
     @ymvc.on_msg_kw_signal(MAIN_FRAME)
     def onMainFrameTxt(self, value):
         self.gui.setStcTxtB(1, value)
 
-    @wx_callafter
+    @ymvc.wx_callafter
     @ymvc.on_msg_kw_signal(MAIN_FRAME + CHILD_FRAME1)
     def onChild1Text2(self, text2):
         if self.unique_name == MAIN_FRAME + CHILD_FRAME2:
             self.gui.setStcTxtB(3, text2)
 
-    @wx_callafter
+    @ymvc.wx_callafter
     @ymvc.on_msg_kw_signal(MAIN_FRAME + CHILD_FRAME2)
     def onChild2Text2(self, text2):
         if self.unique_name == MAIN_FRAME + CHILD_FRAME3:
             self.gui.setStcTxtB(3, text2)
 
-    @wx_callafter
+    @ymvc.wx_callafter
     @ymvc.on_msg_kw_signal(MAIN_FRAME + CHILD_FRAME3)
     def onChild3Text2(self, text2):
         if self.unique_name == MAIN_FRAME + CHILD_FRAME1:
             self.gui.setStcTxtB(3, text2)
 
-    @wx_callafter
+    @ymvc.wx_callafter
     @ymvc.on_msg_kw_signal(MAIN_FRAME + CHILD_FRAME1)
     def onChild1Text3(self, text3):
         if self.unique_name == MAIN_FRAME + CHILD_FRAME3:
             self.gui.setStcTxtB(2, text3)
 
-    @wx_callafter
+    @ymvc.wx_callafter
     @ymvc.on_msg_kw_signal(MAIN_FRAME + CHILD_FRAME2)
     def onChild2Text3(self, text3):
         if self.unique_name == MAIN_FRAME + CHILD_FRAME1:
             self.gui.setStcTxtB(2, text3)
 
-    @wx_callafter
+    @ymvc.wx_callafter
     @ymvc.on_msg_kw_signal(MAIN_FRAME + CHILD_FRAME3)
     def onChild3Text3(self, text3):
         if self.unique_name == MAIN_FRAME + CHILD_FRAME2:

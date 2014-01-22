@@ -6,7 +6,6 @@ Created on 28 Mar 2013
 
 import wx
 import ymvc
-from wx_lib.wxdecorator import wx_callafter
 
 
 class MainFrame(wx.Frame):
@@ -70,7 +69,7 @@ class MainFrameMediator(ymvc.Mediator):
         super(MainFrameMediator, self).__init__('MainFrame')
 
     def on_create_binds(self):
-        self.attrModel = self.model_store['attrModel']
+        self.attrModel = self.proxy_store['attrModel']
         self.view.bind(self.onViewAttr1)
         self.view.bind(self.onViewAttr2)
         self.view.bind(self.onOpen)
@@ -90,12 +89,12 @@ class MainFrameMediator(ymvc.Mediator):
         frame = self.gui.createFrame()
         frame.view.set_mediator(MainFrameMediator())
 
-    @wx_callafter
+    @ymvc.wx_callafter
     @ymvc.on_attr_signal
     def onAttrModelAttr1(self, attr1):
         self.gui.setAttr1(attr1)
 
-    @wx_callafter
+    @ymvc.wx_callafter
     @ymvc.on_attr_signal
     def onAttrModelAttr2(self, attr2):
         self.gui.setAttr2(attr2)
@@ -104,7 +103,7 @@ class MainFrameMediator(ymvc.Mediator):
         print 'ViewDestroyed'
 
 
-class AttrModel(ymvc.Model):
+class AttrModel(ymvc.Proxy):
 
     def __init__(self, attr1='', attr2=''):
         super(AttrModel, self).__init__()
@@ -115,7 +114,7 @@ class AttrModel(ymvc.Model):
 
 if __name__ == '__main__':
 
-    ymvc.model_store['attrModel'] = AttrModel('Attr1', 'Attr2')
+    ymvc.proxy_store['attrModel'] = AttrModel('Attr1', 'Attr2')
     wxapp = wx.App(False)
     mainFrame = MainFrame(None)
     mainFrame.view.set_mediator(MainFrameMediator())
