@@ -5,6 +5,7 @@ Created on 24 Mar 2013
 '''
 
 import functools
+import threading
 import inspect
 import weakref
 
@@ -60,6 +61,16 @@ def wx_callafter(target):
         if not args[0].gui:
             return
         wx.CallAfter(target, *args, **kwargs)
+    return wrapper
+
+
+def run_async(func):
+    '''Decorates a method to run in a separate thread'''
+    @functools.wraps(func)
+    def wrapper(*args, **kwargs):
+        func_hl = threading.Thread(target=func, args=args, kwargs=kwargs)
+        func_hl.start()
+        return func_hl
     return wrapper
 
 
