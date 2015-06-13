@@ -110,10 +110,14 @@ class TestProxy(unittest.TestCase):
         self.assertEqual('StartValue', self.attr1)
 
     def testSetAttrCallback(self):
-        self.proxy.bind(self.attr1Callback)
+        self.proxy.bind(self.SetAttrCallback, False)
         self.proxy.attr1 = 'Testing'
-        self.proxy.wait_in_queue()
-        self.assertEqual('Testing', self.attr1)
+#         self.proxy.wait_in_queue()
+#         self.assertEqual('Testing', self.attr1)
+
+    @ymvc.on_attr_signal
+    def SetAttrCallback(self, attr1):
+        self.assertEqual('Testing', attr1)
 
     def testNonBindAttr(self):
         self.assertEqual('Attr3', self.proxy.attr3)
