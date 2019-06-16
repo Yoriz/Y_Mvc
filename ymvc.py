@@ -9,7 +9,7 @@ import inspect
 import threading
 import weakref
 
-import ysignal
+from y_signal import ysignal
 
 try:
     import wx
